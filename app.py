@@ -1,9 +1,11 @@
 
 from flask import Flask, jsonify, request
+from flas_cors import CORS
 import os
 import excute_game
 
 app = Flask(__name__)
+CORS(app)
 IPadr = ""
 
 @app.route("/")
@@ -11,7 +13,7 @@ def home():
     return "broker for gaminganywhere"
 
 
-@app.route('/get', methods=['GET'])
+@app.route('/IP', methods=['GET'])
 def selectGame():
     gameID = request.args.get("gameId", type=str)
     proID = request.args.get("providerId", type=str)
@@ -25,7 +27,7 @@ def selectGame():
         return jsonify(gamestatus="TRUE", gameIP=IPadr)
 
 
-@app.route('/post', methods=['POST'])
+@app.route('/Login', methods=['POST'])
 def userlogin_info():
     user = request.values.get('username')
     pwd = request.values.get('password')

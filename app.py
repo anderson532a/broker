@@ -1,6 +1,6 @@
 
 from flask import Flask, jsonify, request
-from flas_cors import CORS
+from flask_cors import CORS
 import os
 import excute_game
 

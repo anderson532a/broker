@@ -1,5 +1,6 @@
 import os
 import socket
+import sys
 
 
 cmd = "ipconfig"
@@ -24,7 +25,7 @@ os.chdir(configpath)
 
 B = os.listdir("./")
 
-
+'''
 print(A)
 print(B[0])
 print(type(B), len(B))
@@ -32,3 +33,6 @@ print(type(B), len(B))
 for i in range(len(B)):
     C = os.path.splitext(B[i])[0]
     print(C, type(C))
+'''
+
+print(sys.path)

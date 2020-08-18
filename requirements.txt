@@ -2,8 +2,11 @@ astroid==2.4.2
 certifi==2020.6.20
 chardet==3.0.4
 click==7.1.2
+distlib==0.3.1
+filelock==3.0.12
 colorama==0.4.3
 Flask==1.1.2
+Flask-Cors==3.0.8
 idna==2.10
 isort==4.3.21
 itsdangerous==1.1.0

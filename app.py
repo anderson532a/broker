@@ -13,6 +13,18 @@ def home():
     return "broker for gaminganywhere"
 
 
+@app.route('/TEST', methods=['GET'])
+def test():
+    gameID = request.args.get("gameId", type=str)
+    proID = request.args.get("providerId", type=str)
+    selectconfig = request.args.get("configfile", type=str)
+    ip = request.remote_addr
+    IPadr = "123.123.123.123"
+    return jsonify(gamestatus="TRUE", gameIP=IPadr)
+
+        
+
+
 @app.route('/IP', methods=['GET'])
 def selectGame():
     gameID = request.args.get("gameId", type=str)

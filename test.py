@@ -30,6 +30,7 @@ for i in range(len(B)):
     C = os.path.splitext(B[i])[0]
     print(C, type(C))
 '''
+print(sys.path)
 
 gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.com",
                        user="applecatcar", 
@@ -45,4 +46,3 @@ print("Database version : %s " % cursor.fetchone())
 
 
 
-print(sys.path)

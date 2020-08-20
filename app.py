@@ -24,7 +24,7 @@ def test():
 
         
 
-
+# api excute game
 @app.route('/IP', methods=['GET'])
 def selectGame():
     gameID = request.args.get("gameId", type=str)
@@ -43,6 +43,9 @@ def selectGame():
 def userlogin_info():
     user = request.values.get('username')
     pwd = request.values.get('password')
+
+
+
 
 
 if __name__ == "__main__":

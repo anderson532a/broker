@@ -9,8 +9,8 @@ gamepath = "C:\\gamefile\\"
 S_EVD = "start ga-server-event-driven config//"
 S_PD = "start ga-server-periodic config//"
 
-hostname = socket.gethostname()
-IPadrr = socket.gethostbyname(hostname)
+_hostname = socket.gethostname()
+_IPadrr = socket.gethostbyname(_hostname)
 
 IP = ""
 selectconfig = ""
@@ -33,7 +33,7 @@ class IP_config:
 
     def get_IP(self):
         if self.status == 0:
-            return IPadrr
+            return _IPadrr
         else:
             return IP
 

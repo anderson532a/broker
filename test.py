@@ -30,7 +30,7 @@ for i in range(len(B)):
     C = os.path.splitext(B[i])[0]
     print(C, type(C))
 '''
-print(sys.path)
+# print(sys.path)
 
 gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.com",
                        user="applecatcar", 
@@ -39,10 +39,26 @@ gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.c
                        )
 
 cursor = gamedb.cursor()
+A = '*'
+B = "config_fix"
+# "select * from config_fix"
+# cursor.execute("use gamedb") 
+print(f"select {A} from {B}")
+cursor.execute(f"select {A} from {B}") 
+
+
+'''
 cursor.execute("SELECT VERSION()") 
 
-print("Database version : %s " % cursor.fetchone())
+B = cursor.fetchone()
+for i in range(len(B)):
+    if B[i] == None:
+        B = B[:i]
+        break
 
+print(type(B))
+print( f"{B}")
 
+'''
 
 

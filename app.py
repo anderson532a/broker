@@ -23,7 +23,6 @@ def test():
     return jsonify(gamestatus="TRUE", gameIP=IPadr)
 
         
-
 # api excute game
 @app.route('/IP', methods=['GET'])
 def selectGame():

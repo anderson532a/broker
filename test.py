@@ -2,12 +2,13 @@ import os
 import socket
 import sys
 import MySQLdb
+import SQL_connect
+import cofig_editor
 
-'''
 cmd = "ipconfig"
 exIP = "8.8.8.8"
-configpath = "C:\\gaminganywhere-0.8.0\\bin\\config"
-
+configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\server.neverball.conf"
+'''
 os.system()
 
 d = os.popen(cmd)
@@ -31,20 +32,32 @@ for i in range(len(B)):
     print(C, type(C))
 '''
 # print(sys.path)
-
+'''
 gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.com",
                        user="applecatcar", 
                        passwd="redorange",
                        db="gamedb"
                        )
-
 cursor = gamedb.cursor()
+'''
 A = '*'
 B = "config_fix"
+C = "name"
+D = ()
 # "select * from config_fix"
 # cursor.execute("use gamedb") 
-print(f"select {A} from {B}")
-cursor.execute(f"select {A} from {B}") 
+print(f"select {A} from {B}" + f" where {C} = {D}")
+# cursor.execute(f"select {A} from {B}") 
+'''
+r = open(configpath,'r')
+j = 0
+for i in r:
+    j += 1
+    print(j)
+    A = i.split("=",1)
+    print(A[0].rstrip())
+# x = open(configpath,'x')
+'''
 
 
 '''
@@ -61,4 +74,5 @@ print( f"{B}")
 
 '''
 
+SQL = SQL_connect()
 

@@ -38,16 +38,6 @@ class IP_config:
             return IP
 
 
-# check match config
-'''
-os.chdir(configpath)
-configfile = os.listdir("./")
-for i in range(len(configfile)):
-    if selectconfig == configfile[i]
-    break
-
-'''
-
 # selectconfig = "server.neverball.conf"
 
 

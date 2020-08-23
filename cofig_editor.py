@@ -24,17 +24,21 @@ class find_match:
     def __init__(self,name):
         os.chdir(configpath)
         self.name = name
-        f = open(self.name,'r')
+        self.f = open(self.name,'r')
+
     def scan_line(self,word):
         self.word = word
         line = 0
-        for i in f:
+        for i in self.f:
             line +=1
+            if i == self.word:
+                return line    
+        return 0
 
     def scan_head(self,word):
         self.word = word
         line = 0
-        for i in f:
+        for i in self.f:
             line +=1
             A = i.split("=",1)
             B = self.word.split("=",1)
@@ -43,24 +47,20 @@ class find_match:
             else:
                 return 0
 
-
 # write config data to local
 class edit_config(find_match):
     def __init__(self,name):
         super().__init__
-        f = open(self.name,'a')
+        self.f = open(self.name,'a')
+    
+
 
 # create new config file
 class create_new:
     def __init__(self,name):
-        f = open(self.name,'x')
+        self.name = name
+        self.f = open(self.name,'x')
     
-
-
-
-
-
- 
 
 
 

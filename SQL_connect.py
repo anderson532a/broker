@@ -53,7 +53,15 @@ class writeSQL(SQL_CMD):
             self.CMD = self.CMD1 + self.CMD2
         super().execute()
     
-   # def update(self):
+   def update(self, colomn, item, num = 1, w1 = None, w2 = None):
+       self.item = item
+       self.colomn = colomn
+       self.Table = _table[num]
+       self.w1 = w1
+       self.w2 = w2
+
+
+
 
 
 

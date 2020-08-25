@@ -20,7 +20,6 @@ class SQL_CMD:
 class readSQL(SQL_CMD):
     def __init__(self):
         self.CMD1 = f"select {self.item} from {self.Table}"
-        self.CMD2 = f""
 
     def select(self, item, num = 1, w1 = None, w2 = None):
         self.item = item
@@ -40,20 +39,25 @@ class writeSQL(SQL_CMD):
         self.CMD1 = f"insert into {self.Table}"
         self.CMD2 = f"values {self.item}"
 
-        self.CMD3 = f"update {self.Table} set{self.colomn}={self.item} where {self.w1}={self.w2}"
+        self.CMD3 = f"update {self.Table} set{self.column}={self.item} where {self.w1}={self.w2}"
     
-    def insert(self, item = (), colomn = (), num = 1):
+    def insert(self, item = (), column = (), num = 1):
         self.Table = _table[num] 
         self.item = item
-        self.colomn = colomn
-        if self.colomn != ():
-            self.CCMD = f"{self.colomn}"
+        self.column = column
+        if self.column != ():
+            self.CCMD = f"{self.column}"
             self.CMD = self.CMD1 + self.CCMD + self.CMD2
         else:
             self.CMD = self.CMD1 + self.CMD2
         super().execute()
     
-   # def update(self):
+    def update(self, item = (), column = (), num = 1, w1 = None, w2 = None):
+        self.item = item
+        self.column = column
+        self.Table = _table[num] 
+        self.w1 = w1
+        self.w2 = w2
 
 
 

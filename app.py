@@ -7,6 +7,7 @@ import excute_game
 app = Flask(__name__)
 CORS(app)
 IPadr = ""
+pre_game = ""
 
 @app.route("/")
 def home():
@@ -29,6 +30,10 @@ def selectGame():
     gameID = request.args.get("gameId", type=str)
     extype = request.args.get("excutetype", type=str)
     selectconfig = request.args.get("configfile", type=str)
+    if pre_game != "":
+        
+
+
     game = excute_game.IP_config()
     game.set_config(selectconfig, extype)
     IPadr = game.get_IP()
@@ -37,6 +42,12 @@ def selectGame():
     else:
         return jsonify(gamestatus="TRUE", gameIP=IPadr)
         print(f"{IPadr}")
+    
+    pre_game = selectconfig.split('.')[1]
+
+@app.route('/quit', methods=['GET'])
+def leavegame():
+
 
 
 @app.route('/Login', methods=['POST'])

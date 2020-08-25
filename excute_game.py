@@ -1,5 +1,6 @@
 import os
 import socket
+import psutil
 
     
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -13,8 +14,6 @@ _hostname = socket.gethostname()
 _IPadrr = socket.gethostbyname(_hostname)
 
 IP = ""
-selectconfig = ""
-
 
 class IP_config:
     def __init__(self):
@@ -44,6 +43,10 @@ class IP_config:
             return _IPadrr
         else:
             return IP
+
+class kill_process:
+    def __init__(self):
+        
 
 
 # selectconfig = "server.neverball.conf"

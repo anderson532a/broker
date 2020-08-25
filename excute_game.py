@@ -20,12 +20,20 @@ class IP_config:
     def __init__(self):
         self.status = 1
 
-    def set_config(self, selectconfig):
+    def set_config(self, selectconfig, extype):
         self.selectconfig = selectconfig
+        self.extype = extype
 
-    # start game
+        if self.extype == "event-driven":
+            CMD = S_EVD + self.selectconfig
+        else:
+            Name = self.selectconfig.split('.')[1]
+            CMD = S_PD + self.selectconfig
+            os.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
+
+    # start gaminganywhere
         os.chdir(exepath)
-        self.status = os.system(S_EVD + self.selectconfig)
+        self.status = os.system(CMD)
         if self.status == 0:
             print("game excuted")
         else:

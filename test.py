@@ -2,20 +2,19 @@ import os
 import socket
 import sys
 import MySQLdb
-import SQL_connect
 import cofig_editor
 
-cmd = "ipconfig"
+cmd = "C:\\gamefile\\FPS_Game\\FPS_Game\\FPS_Game.exe"
 exIP = "8.8.8.8"
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\server.neverball.conf"
-'''
-os.system()
+
+# os.system()
 
 d = os.popen(cmd)
 print(d.read())
 os.getcwd()
 A = os.getcwd()
-
+'''
 # os.chdir("C:\\")
 os.system(cmd)
 A = os.getcwd()
@@ -74,5 +73,5 @@ print( f"{B}")
 
 '''
 
-SQL = SQL_connect()
+ # SQL = SQL_connect()
 

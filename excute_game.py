@@ -23,13 +23,15 @@ class IP_config:
     def set_config(self, selectconfig, extype):
         self.selectconfig = selectconfig
         self.extype = extype
+        Name = self.selectconfig.split('.')[1]
+        k = kill_process(f"{Name}.exe")
+        k.check_dupli()
 
         if self.extype == "event-driven":
             _CMD = S_EVD + self.selectconfig
         else:
-            Name = self.selectconfig.split('.')[1]
             _CMD = S_PD + self.selectconfig
-            p = psutil.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
+            os.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
 
     # start gaminganywhere
         os.chdir(exepath)
@@ -50,14 +52,15 @@ class kill_process:
     def __init__(self, Name, pid=None):
         self.Name = Name
         self.pid = pid
+        self.CMD = TER + f"{self.Name}"
 
     def terminate(self):
-        _CMD = TER + f"{self.Name}.exe"
-        os.system(_CMD)
+        os.system(self.CMD)
     
-'''
-    def check_kill(self):
-'''
+    def check_dupli(self):
+        for proc in psutil.process_iter():           
+            if proc.name() == self.Name:
+                os.system(self.CMD)
 
 
 # selectconfig = "server.neverball.conf"

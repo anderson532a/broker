@@ -11,27 +11,27 @@ cmd = "ipconfig"
 exIP = "8.8.8.8"
 configpath = r"C:\gaminganywhere-0.8.0\bin\config\server.neverball.conf"
 
-
+'''
 APP = "LINE.exe"
 # process = subprocess.Popen()
 print(configpath)
-p = psutil.Popen("LINE")
-print(p.name())
-# time.sleep(4)
-# p.kill()
+p = psutil.Popen("C:\\gamefile\\FPS_Game\\FPS_Game\\FPS_Game")
+print(p.pid)
+time.sleep(10)
+p.kill()
 '''
-APP = "LINE.exe"
+APP = "C:\\gamefile\\FPS_Game\\FPS_Game\\FPS_Game"
 command = f"taskkill /F /IM {APP}"
-P_name = []
-for proc in psutil.process_iter():
-    if proc.name() == APP:
-        os.system(command)
+for pid in psutil.pids():
+    proc = psutil.Process(pid)
+    print(proc)
 
-    print(proc.name())
-'''
 
 # os.system(command)
 '''
+ if proc.name() == APP:
+        os.system(command)
+
 print(P_name)
 if APP in P_name:
     os.system(command)

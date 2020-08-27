@@ -1,20 +1,50 @@
 import os
 import socket
 import sys
-import MySQLdb
+# import MySQLdb
+import psutil
 import cofig_editor
+from subprocess import PIPE
+import time
 
-cmd = "C:\\gamefile\\FPS_Game\\FPS_Game\\FPS_Game.exe"
+cmd = "ipconfig"
 exIP = "8.8.8.8"
-configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\server.neverball.conf"
+configpath = r"C:\gaminganywhere-0.8.0\bin\config\server.neverball.conf"
 
-# os.system()
+
+APP = "LINE.exe"
+# process = subprocess.Popen()
+print(configpath)
+p = psutil.Popen("LINE")
+print(p.name())
+# time.sleep(4)
+# p.kill()
+'''
+APP = "LINE.exe"
+command = f"taskkill /F /IM {APP}"
+P_name = []
+for proc in psutil.process_iter():
+    if proc.name() == APP:
+        os.system(command)
+
+    print(proc.name())
+'''
+
+# os.system(command)
+'''
+print(P_name)
+if APP in P_name:
+    os.system(command)
+'''
+
+'''
+os.system()
 
 d = os.popen(cmd)
 print(d.read())
 os.getcwd()
 A = os.getcwd()
-'''
+
 # os.chdir("C:\\")
 os.system(cmd)
 A = os.getcwd()
@@ -38,16 +68,15 @@ gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.c
                        db="gamedb"
                        )
 cursor = gamedb.cursor()
-'''
+
 A = '*'
 B = "config_fix"
 C = "name"
 D = ()
 # "select * from config_fix"
 # cursor.execute("use gamedb") 
-print(f"select {A} from {B}" + f" where {C} = {D}")
 # cursor.execute(f"select {A} from {B}") 
-'''
+
 r = open(configpath,'r')
 j = 0
 for i in r:
@@ -72,6 +101,3 @@ print(type(B))
 print( f"{B}")
 
 '''
-
- # SQL = SQL_connect()
-

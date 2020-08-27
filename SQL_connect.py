@@ -1,27 +1,37 @@
 import MySQLdb
-
+'''old data
 gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.com",
                        user="applecatcar", 
                        passwd="redorange",
                        db="gamedb"
                        )
+'''
+gamedb = MySQLdb.connect(host="localhost",
+                         user="root",
+                         passwd="Aa123456",
+                         db="gamedb"
+                         )
 
 cur = gamedb.cursor()
 
-_table = "config_fix","config_mapping","config_changable"
+_table = "config_fix", "config_mapping", "config_changable", "gamelist"
+
 
 class SQL_CMD:
-    def __init__(self,CMD):
+    def __init__(self, CMD):
         self.CMD = CMD
+
     def execute(self):
         return cur.execute(self.CMD)
 
-# read config info from MySQL
+# read info from MySQL
+
+
 class readSQL(SQL_CMD):
     def __init__(self):
         self.CMD1 = f"select {self.item} from {self.Table}"
 
-    def select(self, item, num = 1, w1 = None, w2 = None):
+    def select(self, item, num=1, w1=None, w2=None):
         self.item = item
         self.Table = _table[num]
         self.w1 = w1
@@ -32,7 +42,12 @@ class readSQL(SQL_CMD):
             self.CMD = self.CMD1
         super().execute()
 
-    # def join(self):
+
+'''
+    def join(self):
+
+'''
+
 
 class writeSQL(SQL_CMD):
     def __init__(self):
@@ -40,9 +55,9 @@ class writeSQL(SQL_CMD):
         self.CMD2 = f"values {self.item}"
 
         self.CMD3 = f"update {self.Table} set{self.column}={self.item} where {self.w1}={self.w2}"
-    
-    def insert(self, item = (), column = (), num = 1):
-        self.Table = _table[num] 
+
+    def insert(self, item=(), column=(), num=1):
+        self.Table = _table[num]
         self.item = item
         self.column = column
         if self.column != ():
@@ -51,24 +66,16 @@ class writeSQL(SQL_CMD):
         else:
             self.CMD = self.CMD1 + self.CMD2
         super().execute()
-    
-    def update(self, item = (), column = (), num = 1, w1 = None, w2 = None):
+
+    def update(self, item=(), column=(), num=1, w1=None, w2=None):
         self.item = item
         self.column = column
-        self.Table = _table[num] 
+        self.Table = _table[num]
         self.w1 = w1
         self.w2 = w2
 
 
-
-
-
-
-
-
-
 # create config for new game
-
 '''
 
 '''
@@ -81,9 +88,7 @@ gamedb.commit()
 gamedb.close()
 '''
 
-# default local setting to SQL 
+# default local setting to SQL
 
 
-
-# check SQL & local data metch 
-
+# check SQL & local data metch

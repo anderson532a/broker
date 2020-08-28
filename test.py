@@ -6,11 +6,19 @@ import psutil
 import cofig_editor
 from subprocess import PIPE
 import time
+import winrm
 
 cmd = "ipconfig"
 exIP = "8.8.8.8"
 configpath = r"C:\gaminganywhere-0.8.0\bin\config\server.neverball.conf"
 
+# os.system("taskkill /F /IM neverball.exe")
+
+session = winrm.Session('192.168.137.183',auth=( 'RD' , 'Aa123456' ))
+cmd = session.run_cmd('ipconfig')
+print(cmd.std_out.decode('big5'))
+print(cmd.status_code)
+print(cmd.std_err)
 '''
 APP = "LINE.exe"
 # process = subprocess.Popen()
@@ -20,12 +28,14 @@ print(p.pid)
 time.sleep(10)
 p.kill()
 '''
+
+'''
 APP = "C:\\gamefile\\FPS_Game\\FPS_Game\\FPS_Game"
 command = f"taskkill /F /IM {APP}"
 for pid in psutil.pids():
     proc = psutil.Process(pid)
-    print(proc)
-
+    print(proc.name())
+'''
 
 # os.system(command)
 '''

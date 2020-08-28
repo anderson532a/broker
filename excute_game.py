@@ -24,8 +24,6 @@ class IP_config:
         self.selectconfig = selectconfig
         self.extype = extype
         Name = self.selectconfig.split('.')[1]
-        k = kill_process(f"{Name}.exe")
-        k.check_dupli()
 
         if self.extype == "event-driven":
             _CMD = S_EVD + self.selectconfig
@@ -52,7 +50,7 @@ class kill_process:
     def __init__(self, Name, pid=None):
         self.Name = Name
         self.pid = pid
-        self.CMD = TER + f"{self.Name}"
+        self.CMD = TER + f"{self.Name}" + "exe"
 
     def terminate(self):
         os.system(self.CMD)

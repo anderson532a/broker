@@ -36,8 +36,9 @@ def selectGame():
     if IPadr == "":
         return jsonify(gamestatus="FALSE", gameIP=IPadr)
     else:
-        return jsonify(gamestatus="TRUE", gameIP=IPadr)
         print(f"{IPadr}")
+        return jsonify(gamestatus="TRUE", gameIP=IPadr)
+        
 
 
 @app.route('/End', methods=['GET'])

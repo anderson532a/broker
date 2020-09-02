@@ -27,7 +27,7 @@ class IP_config:
 
         if self.extype == "event-driven":
             _CMD = S_EVD + self.selectconfig
-        else:
+        else: 
             _CMD = S_PD + self.selectconfig
             os.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
 
@@ -62,3 +62,7 @@ class kill_process:
 
 
 # selectconfig = "server.neverball.conf"
+
+''' win cmd get pid
+Get-Process | Where-Object { $_.ProcessName -eq 'cmd' } | ForEach-Object { $_.Id }
+'''

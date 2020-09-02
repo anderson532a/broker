@@ -13,7 +13,7 @@ gamedb = MySQLdb.connect(host="localhost",
                          )
 
 cur = gamedb.cursor()
-default = {"config_fix", "config_mapping", "config_changable", "gamelist"}
+default = {"config_fix", "config_mapping", "config_changable", "gamelist", " gaconnection"}
 class SQL_CMD:
     def __init__(self, CMD, table = default):
         self.CMD = CMD
@@ -28,6 +28,12 @@ class SQL_CMD:
 
     def execute(self):
         return cur.execute(self.CMD)
+
+    def close(self):
+        cur.close()
+        gamedb.commit()
+        gamedb.close()
+
 
 # read info from MySQL
 
@@ -45,6 +51,7 @@ class readSQL(SQL_CMD):
         else:
             self.CMD = self.CMD1
         super().execute()
+        super().close()
 
 
 '''
@@ -69,6 +76,7 @@ class writeSQL(SQL_CMD):
         else:
             self.CMD = self.CMD1 + self.CMD2
         super().execute()
+        super().close()
 
     def update(self, item=(), column=(), num=1, w1=None, w2=None):
         self.item = item
@@ -78,20 +86,8 @@ class writeSQL(SQL_CMD):
         self.w2 = w2
 
 
-# create config for new game
-'''
+# 
 
 '''
-
-# user edit config option
-
+if __name__ == "__main__":
 '''
-cur.close()
-gamedb.commit()
-gamedb.close()
-'''
-
-# default local setting to SQL
-
-
-# check SQL & local data metch

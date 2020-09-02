@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
 import winrm
+import SQL_connect
 import excute_game
 
 app = Flask(__name__)
@@ -26,32 +27,34 @@ def test():
 
 # api excute game
 @app.route('/IP', methods=['GET'])
-def selectGame():
+def startGame():
     gameID = request.args.get("gameId", type=str)
-    extype = request.args.get("excutetype", type=str)
+    exmode = request.args.get("excutemode", type=str)
     selectconfig = request.args.get("configfile", type=str)
     game = excute_game.IP_config()
-    game.set_config(selectconfig, extype)
+    game.set_config(selectconfig, exmode)
     IPadr = game.get_IP()
     if IPadr == "":
         return jsonify(gamestatus="FALSE", gameIP=IPadr)
     else:
         print(f"{IPadr}")
         return jsonify(gamestatus="TRUE", gameIP=IPadr)
-        
 
+@app.route('/Check', method=['GET'])
+def checkstatus():
+
+    ip = request.args.get("ip", type=str)
 
 @app.route('/End', methods=['GET'])
-def endgame():
-    endconfigfile = request.args.get("configfile", type=str)
-    ip = request.args.get("ip", type=str)
-    name = endconfigfile.split('.')[1]
-    session = winrm.Session(f"{ip}",auth=( 'RD' , 'Aa123456' ))
-    cmd = session.run_cmd(f"taskkill /F /IM {name}.exe /IM ga-server-periodic.exe" )
+def endGame():
+    endname = request.args.get("gamename", type=str)
+    serverip = request.args.get("serverip", type=str)
+    session = winrm.Session(f"{serverip}",auth=( 'RD' , 'Aa123456' ))
+    cmd = session.run_cmd(f"taskkill /F /IM {endname}.exe /IM ga-server-periodic.exe" )
     if cmd.status_code == 0: 
-        return jsonify(gamestatus="end game sucessful", gamename=name)
+        return jsonify(gamestatus="end game sucessful", gamename=endname)
     else:
-        return jsonify(gamestatus="failed", gamename=name)
+        return jsonify(gamestatus="failed", gamename=endname)
 
 
 

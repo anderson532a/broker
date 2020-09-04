@@ -1,6 +1,6 @@
 import os
 import socket
-import psutil
+import subprocess
 
 
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -14,11 +14,13 @@ TER = "taskkill /F /IM "
 _hostname = socket.gethostname()
 _IPadrr = socket.gethostbyname(_hostname)
 
+
 IP = ""
 
 class IP_config:
     def __init__(self):
         self.status = 1
+        self.pid = ""
 
     def set_config(self, selectconfig, extype):
         self.selectconfig = selectconfig
@@ -27,10 +29,14 @@ class IP_config:
 
         if self.extype == "event-driven":
             _CMD = S_EVD + self.selectconfig
-        else: 
+        else: # self.extype == "periodic"
             _CMD = S_PD + self.selectconfig
-            os.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
-
+                process = subprocess.Popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
+                self.pid = process.pid
+'''not find file
+            except FileNotFoundError:
+                os.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
+'''
     # start gaminganywhere
         os.chdir(exepath)
         self.status = os.system(_CMD)
@@ -45,24 +51,20 @@ class IP_config:
         else:
             return IP
 
+    def get_PID(self):
+        if self.pid != "":
+            print("get pid")
+        else:
+            print("lost pid")
+        return self.pid
 
-class kill_process:
-    def __init__(self, Name, pid=None):
-        self.Name = Name
-        self.pid = pid
-        self.CMD = TER + f"{self.Name}" + "exe"
 
-    def terminate(self):
-        os.system(self.CMD)
-    
-    def check_dupli(self):
-        for proc in psutil.process_iter():           
-            if proc.name() == self.Name:
-                os.system(self.CMD)
+
+
 
 
 # selectconfig = "server.neverball.conf"
 
-''' win cmd get pid
+''' win powershell get pid
 Get-Process | Where-Object { $_.ProcessName -eq 'cmd' } | ForEach-Object { $_.Id }
 '''

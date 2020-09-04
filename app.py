@@ -34,20 +34,22 @@ def startGame():
     game = excute_game.IP_config()
     game.set_config(selectconfig, exmode)
     IPadr = game.get_IP()
-    if IPadr == "":
-        return jsonify(gamestatus="FALSE", gameIP=IPadr)
+    PID = game.get_PID()
+    if IPadr == "" & PID == "":
+        return jsonify(gamestatus="FALSE", gameIP=IPadr, PID=PID)
     else:
-        print(f"{IPadr}")
-        return jsonify(gamestatus="TRUE", gameIP=IPadr)
-
+        print(f"{IPadr},{PID}")
+        return jsonify(gamestatus="TRUE", gameIP=IPadr, PID=PID)
+'''
 @app.route('/Check', method=['GET'])
 def checkstatus():
-
     ip = request.args.get("ip", type=str)
+'''
+
 
 @app.route('/End', methods=['GET'])
 def endGame():
-    endname = request.args.get("gamename", type=str)
+    endname = request.args.get("filename", type=str)
     serverip = request.args.get("serverip", type=str)
     session = winrm.Session(f"{serverip}",auth=( 'RD' , 'Aa123456' ))
     cmd = session.run_cmd(f"taskkill /F /IM {endname}.exe /IM ga-server-periodic.exe" )

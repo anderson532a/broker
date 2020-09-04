@@ -1,10 +1,9 @@
 import os
-import socket
+# import socket
 import sys
-# import MySQLdb
-import psutil
+import MySQLdb
+import subprocess
 import cofig_editor
-from subprocess import PIPE
 import time
 import winrm
 
@@ -12,13 +11,17 @@ cmd = "ipconfig"
 exIP = "8.8.8.8"
 configpath = r"C:\gaminganywhere-0.8.0\bin\config\server.neverball.conf"
 
-# os.system("taskkill /F /IM neverball.exe")
+P = subprocess.Popen("notepad.exe")
+print(P.pid)
 
+# os.system("taskkill /F /IM neverball.exe")
+'''
 session = winrm.Session('192.168.137.183',auth=( 'RD' , 'Aa123456' ))
 cmd = session.run_cmd('ipconfig')
 print(cmd.std_out.decode('big5'))
 print(cmd.status_code)
 print(cmd.std_err)
+'''
 '''
 APP = "LINE.exe"
 # process = subprocess.Popen()
@@ -70,11 +73,11 @@ for i in range(len(B)):
     C = os.path.splitext(B[i])[0]
     print(C, type(C))
 '''
-# print(sys.path)
 '''
-gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.com",
-                       user="applecatcar", 
-                       passwd="redorange",
+# print(sys.path)
+gamedb = MySQLdb.connect(host="localhost",
+                       user="root", 
+                       passwd="Aa123456",
                        db="gamedb"
                        )
 cursor = gamedb.cursor()
@@ -83,10 +86,16 @@ A = '*'
 B = "config_fix"
 C = "name"
 D = ()
-# "select * from config_fix"
-# cursor.execute("use gamedb") 
+E = "select * from config_fix"
+cursor.execute("show Tables")
+read = cursor.fetchall()
+cursor.close()
+gamedb.commit()
+print(read)
 # cursor.execute(f"select {A} from {B}") 
+'''
 
+'''
 r = open(configpath,'r')
 j = 0
 for i in r:
@@ -95,9 +104,10 @@ for i in r:
     A = i.split("=",1)
     print(A[0].rstrip())
 # x = open(configpath,'x')
+
+
+
 '''
-
-
 '''
 cursor.execute("SELECT VERSION()") 
 

@@ -16,7 +16,6 @@ Jinja2==2.11.2
 lazy-object-proxy==1.4.3
 MarkupSafe==1.1.1
 mccabe==0.6.1
-mysqlclient @ file:///C:/Users/RD/Desktop/broker/env/Lib/site-packages/mysqlclient-1.4.6-cp38-cp38-win32.whl
 ntlm-auth==1.5.0
 psutil==5.7.2
 pycparser==2.20

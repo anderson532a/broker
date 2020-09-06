@@ -17,6 +17,7 @@ _IPadrr = socket.gethostbyname(_hostname)
 
 IP = ""
 
+
 class IP_config:
     def __init__(self):
         self.status = 1
@@ -29,14 +30,15 @@ class IP_config:
 
         if self.extype == "event-driven":
             _CMD = S_EVD + self.selectconfig
-        else: # self.extype == "periodic"
+        else:  # self.extype == "periodic"
             _CMD = S_PD + self.selectconfig
-                process = subprocess.Popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
-                self.pid = process.pid
-'''not find file
-            except FileNotFoundError:
-                os.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
-'''
+            process = subprocess.Popen(
+                gamepath + f"{Name}\\{Name}\\{Name}.exe")
+            self.pid = process.pid
+
+            # except FileNotFoundError:    #not find file
+            #os.popen(gamepath + f"{Name}\\{Name}\\{Name}.exe")
+
     # start gaminganywhere
         os.chdir(exepath)
         self.status = os.system(_CMD)
@@ -59,12 +61,7 @@ class IP_config:
         return self.pid
 
 
-
-
-
-
 # selectconfig = "server.neverball.conf"
-
 ''' win powershell get pid
 Get-Process | Where-Object { $_.ProcessName -eq 'cmd' } | ForEach-Object { $_.Id }
 '''

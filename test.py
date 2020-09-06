@@ -121,3 +121,22 @@ print(type(B))
 print( f"{B}")
 
 '''
+def trytry(A,*C,**B):
+    if B != {}:
+        BB = B.keys()
+        D = {}
+        DD = D.items()
+        BBB = B.values()
+        BBBB = B.items()
+        print(BB)
+        AAA = ""
+        for i, j in BBBB:
+            if AAA == "":
+                AAA = f"{i}={j}"
+            else:
+                AA = f", {i}={j}"
+                AAA = AAA+AA
+            print(AAA, BBBB)
+        print(C,DD)
+if __name__ == "__main__":
+    trytry(5,c=5,w=8)

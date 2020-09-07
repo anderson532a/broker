@@ -4,7 +4,7 @@ from flask_cors import CORS
 import os
 import winrm
 import SQL_connect
-import excute_game
+import remote_control
 
 app = Flask(__name__)
 CORS(app)
@@ -13,7 +13,6 @@ IPadr = ""
 @app.route("/")
 def home():
     return "broker for gaminganywhere"
-
 
 @app.route('/TEST', methods=['GET'])
 def test():
@@ -31,11 +30,11 @@ def startGame():
     gameID = request.args.get("gameId", type=str)
     exmode = request.args.get("excutemode", type=str)
     selectconfig = request.args.get("configfile", type=str)
-    game = excute_game.IP_config()
+    game = remote_control.excute_game()
     game.set_config(selectconfig, exmode)
     IPadr = game.get_IP()
     PID = game.get_PID()
-    if IPadr == "" & PID == "":
+    if IPadr == "" and PID == "":
         return jsonify(gamestatus="FALSE", gameIP=IPadr, PID=PID)
     else:
         print(f"{IPadr},{PID}")
@@ -46,24 +45,17 @@ def checkstatus():
     ip = request.args.get("ip", type=str)
 '''
 
-
 @app.route('/End', methods=['GET'])
-def endGame():
+def endGame(): 
     endname = request.args.get("filename", type=str)
     serverip = request.args.get("serverip", type=str)
+    killpid = request.args.get("pid", type=str)
     session = winrm.Session(f"{serverip}",auth=( 'RD' , 'Aa123456' ))
-    cmd = session.run_cmd(f"taskkill /F /IM {endname}.exe /IM ga-server-periodic.exe" )
+    cmd = session.run_cmd(f"taskkill /F /PID {killpid}" ) # /IM ga-server-periodic.exe
     if cmd.status_code == 0: 
-        return jsonify(gamestatus="end game sucessful", gamename=endname)
+        return jsonify(gamestatus="end game sucessful")
     else:
-        return jsonify(gamestatus="failed", gamename=endname)
-
-
-
-@app.route('/Login', methods=['POST'])
-def userlogin_info():
-    user = request.values.get('username')
-    pwd = request.values.get('password')
+        return jsonify(gamestatus="failed")
 
 
 if __name__ == "__main__":

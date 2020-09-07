@@ -68,13 +68,12 @@ class writeSQL(SQL_CMD):
         self.CMD1 = f"insert into {self.Table} ({self.columns})"
         self.CMD2 = f"values ({self.values})"
 
-        self.CMD3 = f"update {self.Table} {self.set} where {self.w1}={self.w2}"
+        self.CMD3 = f"update {self.Table} set {self.set} where {self.col}={self.val}"
 
-    def insert(self, num=0, *onval,**newitem):
+    def insert(self, num=0,  **newitem):
         self.Table = self.table[num]
         self.new = newitem
-        self.val = onval
-        if self.new != {}:
+        try:
             self.items = self.new.items()
             self.values = ""
             self.columns = ""
@@ -82,26 +81,22 @@ class writeSQL(SQL_CMD):
                 if self.values == "":
                     self.columns = f"{key}"
                     self.values = f"{val}"
-                else:
-                    K = f", {key}"
-                    V = f", {val}"
-                    self.values = self.values + V
-                    self.columns = self.columns + K
+            else:
+                K = f", {key}"
+                V = f", {val}"
+                self.values = self.values + V
+                self.columns = self.columns + K
             self.CMD = self.CMD1  + self.CMD2
-        elif self.val != ():
+            super().execute()
+        except:
             pass
-        else: # error
-            pass
+        finally:
+            super().close()
 
-        super().execute()
-        super().close()
-
-    def update(self, num=1, w1=None, w2=None, **newitem):
+    def update(self, num=1, col="", val="", **newitem):
         self.new = newitem
         self.Table = self.table[num]
-        self.w1 = w1
-        self.w2 = w2
-        if self.new != {}:
+        try:
             self.items = self.new.items()
             CCMD = ""
             for key, val in self.items:
@@ -110,10 +105,15 @@ class writeSQL(SQL_CMD):
                 else:
                     ST = f", {key}={val}"
                     CCMD = CCMD + ST
-            self.set = f"set {CCMD}"
+            self.set = CCMD
             self.CMD = self.CMD3
-        else:
-            self.CMD =  self.CMD3
+            super().execute()
+        except:
+            pass
+        finally:
+            super().close()
+
+
 
 #
 '''

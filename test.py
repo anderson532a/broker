@@ -12,8 +12,9 @@ exIP = "8.8.8.8"
 configpath = r"C:\gaminganywhere-0.8.0\bin\config\server.neverball.conf"
 
 P = subprocess.Popen("notepad.exe")
-print(P.pid)
-
+A = subprocess.getoutput("WMIC PROCESS WHERE Name=\"notepad.exe\" get Processid")
+print(A.split())
+print(A.split()[1])
 # os.system("taskkill /F /IM neverball.exe")
 '''
 session = winrm.Session('192.168.137.183',auth=( 'RD' , 'Aa123456' ))
@@ -105,8 +106,6 @@ for i in r:
     print(A[0].rstrip())
 # x = open(configpath,'x')
 
-
-
 '''
 '''
 cursor.execute("SELECT VERSION()") 
@@ -120,6 +119,7 @@ for i in range(len(B)):
 print(type(B))
 print( f"{B}")
 
+'''
 '''
 def trytry(A,*C,**B):
     if B != {}:
@@ -138,5 +138,7 @@ def trytry(A,*C,**B):
                 AAA = AAA+AA
             print(AAA, BBBB)
         print(C,DD)
+
 if __name__ == "__main__":
     trytry(5,c=5,w=8)
+'''

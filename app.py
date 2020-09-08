@@ -1,10 +1,9 @@
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import os
 import winrm
 import SQL_connect
-import remote_control
+import server_monitor
 
 app = Flask(__name__)
 CORS(app)
@@ -30,7 +29,7 @@ def startGame():
     gameID = request.args.get("gameId", type=str)
     exmode = request.args.get("excutemode", type=str)
     selectconfig = request.args.get("configfile", type=str)
-    game = remote_control.excute_game()
+    game = server_monitor.excute_game()
     game.set_config(selectconfig, exmode)
     IPadr = game.get_IP()
     PID = game.get_PID()
@@ -39,19 +38,18 @@ def startGame():
     else:
         print(f"{IPadr},{PID}")
         return jsonify(gamestatus="TRUE", gameIP=IPadr, PID=PID)
-'''
-@app.route('/Check', method=['GET'])
-def checkstatus():
-    ip = request.args.get("ip", type=str)
-'''
+
 
 @app.route('/End', methods=['GET'])
 def endGame(): 
-    endname = request.args.get("filename", type=str)
+    exmode = request.args.get("excutemode", type=str)
     serverip = request.args.get("serverip", type=str)
     killpid = request.args.get("pid", type=str)
     session = winrm.Session(f"{serverip}",auth=( 'RD' , 'Aa123456' ))
     cmd = session.run_cmd(f"taskkill /F /PID {killpid}" ) # /IM ga-server-periodic.exe
+    if exmode == "periodic":
+        session.run_cmd(f"taskkill /F /IM ga-server-periodic.exe" )
+
     if cmd.status_code == 0: 
         return jsonify(gamestatus="end game sucessful")
     else:

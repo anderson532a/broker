@@ -1,5 +1,5 @@
 import os
-# import socket
+import socket
 import sys
 import MySQLdb
 import subprocess
@@ -11,11 +11,16 @@ cmd = "ipconfig"
 exIP = "8.8.8.8"
 configpath = r"C:\gaminganywhere-0.8.0\bin\config\server.neverball.conf"
 
+A = socket.gethostname()
+B = socket.gethostbyname('www.google.com')
+print(B)
+'''
 P = subprocess.Popen("notepad.exe")
 A = subprocess.getoutput("WMIC PROCESS WHERE Name=\"notepad.exe\" get Processid")
 print(A.split())
 print(A.split()[1])
 # os.system("taskkill /F /IM neverball.exe")
+'''
 '''
 session = winrm.Session('192.168.137.183',auth=( 'RD' , 'Aa123456' ))
 cmd = session.run_cmd('ipconfig')

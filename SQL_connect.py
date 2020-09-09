@@ -14,7 +14,7 @@ gamedb = MySQLdb.connect(host="localhost",
 
 cur = gamedb.cursor()
 default = {"config_fix", "config_mapping",
-           "config_changable", "gamelist", " gaconnection"}
+           "config_changable", "gameslist", " gaconnection"}
 
 
 class SQL_CMD:
@@ -49,12 +49,16 @@ class readSQL(SQL_CMD):
         self.Table = self.table[num]
         self.w1 = w1
         self.w2 = w2
-        if self.w1 != None & self.w2 != None:
-            self.CMD = self.CMD1 + f" where {self.w1}={self.w2}"
-        else:
-            self.CMD = self.CMD1
-        super().execute()
-        super().close()
+        try:
+            if self.w1 != None & self.w2 != None:
+                self.CMD = self.CMD1 + f" where {self.w1}={self.w2}"
+            else:
+                self.CMD = self.CMD1
+            super().execute()
+        except:
+            pass
+        finally:
+            super().close()
 
 
 '''

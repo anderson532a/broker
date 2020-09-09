@@ -1,8 +1,9 @@
-import os
-import sys
+import os, sys
 import socket
+from socketserver import BaseRequestHandler, ThreadingTCPServer
 import subprocess
 import time
+import logging
 
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -13,8 +14,8 @@ S_EVD = "start ga-server-event-driven config//"
 S_PD = "start ga-server-periodic config//"
 TER = "taskkill /F /IM "
 
-_hostname = socket.gethostname()
-_IPadrr = socket.gethostbyname(_hostname)
+hostname = socket.gethostname()
+IPadrr = socket.gethostbyname(hostname)
 
 IP = ""
 
@@ -50,7 +51,7 @@ class excute_game:
 
     def get_IP(self):
         if self.status == 0:
-            return _IPadrr
+            return IPadrr
         else:
             return IP
 
@@ -62,26 +63,30 @@ class excute_game:
         return self.pid
 
 
-class server_socket:
-    PORT = 8000
-    def __init__(self):
-        try:
-            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.server.bind(_IPadrr, PORT)
-        except socket.error:
-            pass
+class Handler(BaseRequestHandler):
+    def handle(self):
+        while True:
+            self.data = self.request.recv(1024).strip()
+            if len(self.data):
+                brockercmd = self.data.decode('utf-8')
+                print("receive = ", brockercmd)
 
-        self.server.listen()
-    
+
+        
+
+
 
 
 
 '''
 class system_monitor:
-
-
+    def __init__(self):
 '''
 
-'''
-if __name__ == "__main__":
-'''
+
+if __name__ == "__main__":# server_socket
+    PORT = 8000
+    ADDR = (IPadrr, PORT)
+    server = ThreadingTCPServer(ADDR, Handler)
+    server.serve_forever()
+    

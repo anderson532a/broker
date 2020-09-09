@@ -13,7 +13,7 @@ configpath = r"C:\gaminganywhere-0.8.0\bin\config\server.neverball.conf"
 
 A = socket.gethostname()
 B = socket.gethostbyname('www.google.com')
-print(B)
+print(A)
 '''
 P = subprocess.Popen("notepad.exe")
 A = subprocess.getoutput("WMIC PROCESS WHERE Name=\"notepad.exe\" get Processid")
@@ -146,4 +146,33 @@ def trytry(A,*C,**B):
 
 if __name__ == "__main__":
     trytry(5,c=5,w=8)
+'''
+
+
+
+'''
+class server_socket:
+    def __init__(self):
+        PORT = 8000
+        try:
+            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server.bind((IPadrr, PORT))
+        except socket.error:
+            pass
+        self.server.listen(1)
+        print("listen on socket")
+
+    def client_connection(self):
+
+        conn, addr = self.server.accept()
+        print(f"connect by {addr}")
+        while True:
+            brokercmd = conn.recv(1024)
+            print(str(brokercmd, encoding='utf-8'))
+            SERMES = "good"
+            conn.sendall(SERMES.encode('utf-8'))
+            if not brokercmd:
+                break
+        conn.close()
+
 '''

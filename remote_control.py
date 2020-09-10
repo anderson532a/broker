@@ -1,6 +1,7 @@
 import winrm
 import socket
 import time
+import logging
 
 _account = {"192.168.43.196":"RD"}
 _pwd = {'RD':'Aa123456'}
@@ -15,7 +16,15 @@ TER = "taskkill /F /IM "
 class remote:
     def __init__(self, ip):
       self.ip = ip
-      session = winrm.Session(f"{self.ip}",auth=(_account[self.ip] , _pwd[_account[self.ip]] ))
+      self.session = winrm.Session(f"{self.ip}",auth=(_account[self.ip] , _pwd[_account[self.ip]] ))
+    def taskkill(self, exmode, pid):
+      self.exmode = exmode
+      self.killpid = pid
+      self.cmd = session.run_cmd(f"taskkill /F /PID {self.killpid}" )
+      if exmode == "periodic":
+        session.run_cmd(f"taskkill /F /IM ga-server-periodic.exe" )
+      
+      return self.cmd.status_code
 
 class client_socket:
   def __init__(self, hostname):
@@ -25,8 +34,8 @@ class client_socket:
       self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       self.client.connect((self.host, PORT))
     except socket.gaierror:
-      print()
-
+      logging.error("socket error", exc_info=True)
+      
   def repeat(self, msg):
     self.msg = msg
     CLMES = f"{self.msg}"

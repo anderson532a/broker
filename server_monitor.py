@@ -3,6 +3,7 @@ import socket
 from socketserver import BaseRequestHandler, ThreadingTCPServer
 import subprocess
 import time
+import json
 import logging
 
 # excute game command
@@ -16,16 +17,15 @@ TER = "taskkill /F /IM "
 
 hostname = socket.gethostname()
 IPadrr = socket.gethostbyname(hostname)
-
+nowgame = ()
 IP = ""
 FORMAT = "%(asctime)s %(levelname)s:%(message)s"
-logging.basicConfig(level=logging.DEBUG, filename='server.log', format=FORMAT)
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
 class excute_game:
     def __init__(self):
         self.status = 1
         self.pid = ""
-
     def set_config(self, config, exmode):
         self.config = config
         self.exmode = exmode
@@ -67,36 +67,55 @@ class excute_game:
 
 class Handler(BaseRequestHandler):
     def handle(self):
+        global nowgame
         while True:
             self.data = self.request.recv(1024).strip()
+            logging.debug(f"send length = {len(self.data)}")
             if len(self.data) > 0:
-                brockercmd = self.data.decode('utf-8')
-                logging.info("receive = ", brockercmd)
-                
+                raw = self.data.decode('utf-8')
+                logging.info(f"server receive =  {raw}")
+                self.brokercmd = json.loads(raw)
+                if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
+                        gameID = self.brokercmd["gameId"]
+                        exmode = self.brokercmd["excuteMode"]   
+                        config = self.brokercmd["configfile"]
+                        logging.info(f"Now game number : {len(nowgame)}")
+                        game = excute_game()
+                        if len(nowgame) == 0:
+                            game.set_config(config, exmode)
+                            IPadr = game.get_IP()
+                            PID = game.get_PID()
+                            nowgame = (PID,)
+                        elif len(nowgame) == 1:
+                            os.system(f"taskkill /F /PID {nowgame[0]}")
+                            game.set_config(config, exmode)
+                            IPadr = game.get_IP()
+                            PID = nowgame[0]
+                            nowgame = (PID,)
+                        else:
+                            logging.error("to many process")
+                        
+                        if IPadr == "" and PID == "":
+                            retdata = {"gamestatus":"FALSE", "gameIP":IPadr, "PID":PID}
+                        else:
+                            retdata = {"gamestatus":"TRUE", "gameIP":IPadr, "PID":PID}
+                        self.request.sendall(json.dumps(retdata).encode('utf-8'))
+                else:
+                    logging.error("api receive wrong args")
             else:
                 logging.warning("didn't receive by broker")
                 break
 
+'''
 class system_monitor:
     def __init__(self):
-        nowgame = set()
-    def gamecheck(self, pid):
-        self.gamepid = pid
-        if len(self.nowgame) == 0:
-            self.nowgame.add(self.gamepid)
-            return True
-        elif len(self.nowgame) == 1:
-            return True
-
-        else:
-            return False
-            
-
+        pass
+'''
 
 if __name__ == "__main__":# server_socket
     PORT = 8000
     ADDR = (IPadrr, PORT)
     server = ThreadingTCPServer(ADDR, Handler)
+    logging.info("server_socket start")
     server.serve_forever()
 
-    

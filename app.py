@@ -2,12 +2,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import SQL_connect
-import server_monitor
+import logging
 import remote_control
 
 app = Flask(__name__)
 CORS(app)
-IPadr = ""
+server_ip = ("192.168.43.196",)
+server_status = {server_ip[0]:""}
 
 @app.route("/")
 def home():
@@ -15,8 +16,10 @@ def home():
 
 @app.route('/TEST', methods=['GET'])
 def test():
+    A = dict(request.args)
+    logging.debug(f"{A}, {type(A)}")
     gameID = request.args.get("gameId", type=str)
-    proID = request.args.get("providerId", type=str)
+    exmode = request.args.get("excuteMode", type=str)
     selectconfig = request.args.get("configfile", type=str)
     ip = request.remote_addr
     IPadr = "123.123.123.123"
@@ -26,27 +29,26 @@ def test():
 # api excute game
 @app.route('/IP', methods=['GET'])
 def startGame():
-    gameID = request.args.get("gameId", type=str)
-    exmode = request.args.get("excutemode", type=str)
-    config = request.args.get("configfile", type=str)
-    game = server_monitor.excute_game()
-    game.set_config(config, exmode)
-    IPadr = game.get_IP()
-    PID = game.get_PID()
-    if IPadr == "" and PID == "":
-        return jsonify(gamestatus="FALSE", gameIP=IPadr, PID=PID)
-    else:
-        print(f"{IPadr},{PID}")
-        return jsonify(gamestatus="TRUE", gameIP=IPadr, PID=PID)
+    global server_status
+    for i in server_ip:
+        if server_status[i] == "":
+            startapi = dict(request.args)
+            conip = request.remote_addr
+            game = remote_control.client_socket(i)
+            result = game.control(**startapi)
+            server_status[i] = conip
+            return jsonify(result)
+        else:
+            return "server is out od range"
 
 
 @app.route('/End', methods=['GET'])
 def endGame(): 
-    exmode = request.args.get("excutemode", type=str)
+    exmode = request.args.get("excuteMode", type=str)
     serverip = request.args.get("serverip", type=str)
     pid = request.args.get("pid", type=str)
     remote_status = remote_control.remote(serverip).taskkill(exmode, pid)
-    
+
     if remote_status == 0: 
         return jsonify(gamestatus="end game sucessful")
     else:

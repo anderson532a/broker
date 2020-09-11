@@ -1,6 +1,7 @@
 import winrm
 import socket
 import time
+import json
 import logging
 
 _account = {"192.168.43.196":"RD"}
@@ -27,26 +28,29 @@ class remote:
       return self.cmd.status_code
 
 class client_socket:
-  def __init__(self, hostname):
+  def __init__(self, hostip):
     PORT = 8000
-    self.host = hostname
+    self.host = hostip
     try:
       self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       self.client.connect((self.host, PORT))
     except socket.gaierror:
       logging.error("socket error", exc_info=True)
       
-  def repeat(self, msg):
-    self.msg = msg
-    CLMES = f"{self.msg}"
-    self.client.sendall(CLMES.encode('utf-8'))
-    rece = self.client.recv(1024)
-    print(str(rece, encoding='utf-8'))    
 
+  def control(self, **cmd):
+    self.cmd = cmd
+    jsonobj = json.dumps(self.cmd)
+    self.client.sendall(jsonobj.encode('utf-8'))
+    logging.info("client send = ", jsonobj)
+    msg = self.client.recv(1024).decode('utf-8')
+    logging.info("client receive = ", msg)
+    return json.loads(msg)
 
+'''
 if __name__ == "__main__":
     A = client_socket("AndersonCJ_Chen")
-    for i in range(20):
-      A.repeat(i)
-      time.sleep(1)
-      i += 1
+    api = {"gameId":123, "excutemode":"periodic", "configfile":"server.PlatformerGame.conf"}
+    B = A.control(**api)
+    print(B)
+'''

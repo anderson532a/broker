@@ -30,26 +30,28 @@ def test():
 @app.route('/IP', methods=['GET'])
 def startGame():
     global server_status
+    startapi = dict(request.args)
+    conip = request.remote_addr
     for i in server_ip:
         if server_status[i] == "":
-            startapi = dict(request.args)
-            conip = request.remote_addr
             game = remote_control.client_socket(i)
             result = game.control(**startapi)
             server_status[i] = conip
             return jsonify(result)
         else:
-            return "server is out od range"
-
+            logging.warning("server is full !!!")
+            return jsonify({"gamestatus":"FULL", "gameIP":"", "PID":""})
 
 @app.route('/End', methods=['GET'])
 def endGame(): 
+    global server_status
     exmode = request.args.get("excuteMode", type=str)
     serverip = request.args.get("serverip", type=str)
     pid = request.args.get("pid", type=str)
     remote_status = remote_control.remote(serverip).taskkill(exmode, pid)
 
-    if remote_status == 0: 
+    if remote_status == 0:
+        server_status[serverip ] = ""
         return jsonify(gamestatus="end game sucessful")
     else:
         return jsonify(gamestatus="failed")

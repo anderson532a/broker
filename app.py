@@ -57,9 +57,14 @@ def endGame():
         return jsonify(gamestatus="failed")
 
 
-@app.route('/add', methods=['POST'])
+@app.route('/Add', methods=['GET'])
 def install():
     pass
+
+@app.route('/Conf', methods=['POST'])
+def config():
+    pass
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

@@ -1,10 +1,9 @@
-import os, sys
-import socket
+import os, sys, subprocess
+import socket, time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
-import subprocess
-import time
 import logging, json
 import SQL_connect
+import config_editor
 
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -105,6 +104,10 @@ class Handler(BaseRequestHandler):
             else:
                 logging.warning("didn't receive by broker")
                 break
+
+
+class configfile:
+    pass
 
 '''
 class system_monitor:

@@ -3,6 +3,7 @@ import socket, time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
 import logging, json
 import SQL_connect
+import config_editor
 
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"

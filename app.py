@@ -13,16 +13,25 @@ server_status = {server_ip[0]:""}
 def home():
     return "broker for gaminganywhere"
 
-@app.route('/TEST', methods=['GET'])
+@app.route('/TEST', methods=['GET', 'POST'])
 def test():
-    A = dict(request.args)
-    logging.debug(f"{A}, {type(A)}")
-    gameID = request.args.get("gameId", type=str)
-    exmode = request.args.get("excuteMode", type=str)
-    selectconfig = request.args.get("configfile", type=str)
-    ip = request.remote_addr
-    IPadr = "123.123.123.123"
-    return jsonify(gamestatus="TRUE", gameIP=IPadr, clientIP=ip)
+    if request.method == 'GET':
+        A = dict(request.args)
+        logging.debug(f"{A}, {type(A)}")
+        gameID = request.args.get("gameId", type=str)
+        exmode = request.args.get("excuteMode", type=str)
+        selectconfig = request.args.get("configfile", type=str)
+        ip = request.remote_addr
+        IPadr = "123.123.123.123"
+        return jsonify(gamestatus="TRUE", gameIP=IPadr, clientIP=ip)
+    elif request.method == 'POST':
+        gname = request.form.get('gamename')
+        DATA = dict(request.form)
+        del DATA['gamename']
+        IP = dict(request.args)
+        print(gname)
+        print(DATA, IP)
+        return "good"
 
 
 # api excute game
@@ -62,8 +71,12 @@ def install():
 
 @app.route('/Conf', methods=['POST'])
 def config():
-    pass
+    gname = request.form.get('gamename')
+    DATA = dict(request.form)
+    del DATA['gamename']
+    para = dict(request.args)
 
+    return "get form"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

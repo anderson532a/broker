@@ -32,15 +32,25 @@ class edit_config(read_in):
 
     def find_match(self, **change):
         self.change = change
+        newlist = []
         # can be opt algorithm
         for line in self.list:
-            for item in self.change:
+            for k, v in self.change.items:
                 if "=" in line:
                     check = line.strip().split(" = ")
-                    if check[0] == 'include':
+                    if 'include' in check[0]:
                         pass
-                    else:
-                        pass
+                    elif check[0] == k:
+                        check[1] = v
+                        line = " = ".join(check) + "\n"
+                        logging.debug("editing : "+ f"{line}")
+
+            newlist.append(line)
+        writein = "".join(newlist)
+        with open(self.name, 'w+') as fw:
+            logging.debug("write mode w+, edit"+ f"{self.name}")
+            fw.seek(0, 0)
+            fw.write(writein)
 
     def comment_out(self):
         pass
@@ -51,14 +61,18 @@ class create_new(read_in):
         super().__init__
         etype = ("periodic", "event-driven")
         self.type = etype[N]
-    def new(self):
+    def create(self):
         template = Path.cwd() / f"server/server.{self.type}.conf"
         self.confname = f"server.{self.name}.conf"
         newpath = configpath + self.confname
-        with open(newpath, 'w+') as fw:
-            logging.debug("write mode w+")
+        try:
+            with open(newpath, 'x') as fw:
+                logging.debug("write mode x, create new"+ f"{self.name}")
 
-
+        except FileExistsError:
+            logging.error("file already exist!! try edit", exc_info=True)
+    def add(self):
+        pass
 
 
 
@@ -67,11 +81,6 @@ class create_new(read_in):
 if __name__ == "__main__": # for testing
     test = create_new("ABC")
     test.new()
-
-
-
-
-
 
 
 # check match config

@@ -2,7 +2,7 @@ import os, sys, subprocess
 import socket, time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
 import logging, json
-import SQL_connect
+import config_editor
 
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -98,15 +98,18 @@ class Handler(BaseRequestHandler):
                         else:
                             retdata = {"gamestatus":"TRUE", "gameIP":IPadr, "PID":PID}
                         self.request.sendall(json.dumps(retdata).encode('utf-8'))
+                elif "gamename" and "excuteMode" in self.brokercmd:
+                    gname = self.brokercmd["gamename"]
+                    exmode = self.brokercmd["excuteMode"]
+                    config_editor.create_new(gname, mode = exmode).create()
+
+
+
                 else:
-                    logging.error("api receive wrong args")
+                    logging.warnings("api can't recognize args")
             else:
-                logging.warning("didn't receive by broker")
+                logging.error("didn't receive by broker")
                 break
-
-
-class configfile:
-    pass
 
 '''
 class system_monitor:

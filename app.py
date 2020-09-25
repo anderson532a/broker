@@ -66,15 +66,40 @@ def endGame():
 
 
 @app.route('/Add', methods=['GET'])
-def install():
-    pass
+def newgame():
+    gname = request.form.get('gamename', type=str)
+    CREAT = dict(request.args)
+    for i in server_ip:
+        config = remote_control.client_socket(i)
+        result = config.control(**CREAT)
+
+    return f"{gname}" + "create sucess"
+    
 
 @app.route('/Conf', methods=['POST'])
 def config():
-    gname = request.form.get('gamename')
-    DATA = dict(request.form)
-    del DATA['gamename']
+    gname = request.form.get('gamename', type=str)
+    EDIT = dict(request.form)
+    del EDIT['gamename']
     para = dict(request.args)
+    COMME = {}
+    if 'include' in str(EDIT):
+        for k, v in EDIT.items():
+            if 'include' in str(k):
+                COMME[k]=v
+                EDIT.pop(k)
+    if para != {}:
+        pass
+    else:
+        for i in server_ip:
+            config = remote_control.client_socket(i)
+            result1 = config.control(**{"gamename":gname})
+            if EDIT != {}:
+                logging.debug("edit : " + f"{EDIT}")
+                result2 =config.control(**EDIT)
+            if COMME != {}:
+                logging.debug("comment : " + f"{COMME}")
+                result3 =config.control(**COMME)
 
     return "get form"
 

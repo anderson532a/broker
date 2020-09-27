@@ -1,7 +1,11 @@
-import os, sys, subprocess
-import socket, time
+import os
+import sys
+import subprocess
+import socket
+import time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
-import logging, json
+import logging
+import json
 import config_editor
 
 # excute game command
@@ -20,10 +24,12 @@ IP = ""
 FORMAT = "%(asctime)s %(levelname)s:%(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
+
 class excute_game:
     def __init__(self):
         self.status = 1
         self.pid = ""
+
     def set_config(self, config, exmode):
         self.config = config
         self.exmode = exmode
@@ -33,7 +39,8 @@ class excute_game:
             os.chdir(exepath)
             self.status = os.system(_CMD)  # start gaminganywhere
             time.sleep(1)
-            get = subprocess.getoutput(f"WMIC PROCESS WHERE Name=\"{Name}.exe\" get Processid")
+            get = subprocess.getoutput(
+                f"WMIC PROCESS WHERE Name=\"{Name}.exe\" get Processid")
             self.pid = get.split()[-1]
 
         else:  # self.exmode == "periodic"
@@ -74,42 +81,47 @@ class Handler(BaseRequestHandler):
                 logging.info(f"server receive =  {raw}")
                 self.brokercmd = json.loads(raw)
                 if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
-                        gameID = self.brokercmd["gameId"]
-                        exmode = self.brokercmd["excuteMode"]   
-                        config = self.brokercmd["configfile"]
-                        logging.info(f"Now game number : {len(nowgame)}")
-                        game = excute_game()
-                        if len(nowgame) == 0:
-                            game.set_config(config, exmode)
-                            IPadr = game.get_IP()
-                            PID = game.get_PID()
-                            nowgame = (PID,)
-                        elif len(nowgame) == 1:
-                            os.system(f"taskkill /F /PID {nowgame[0]}")
-                            game.set_config(config, exmode)
-                            IPadr = game.get_IP()
-                            PID = nowgame[0]
-                            nowgame = (PID,)
-                        else:
-                            logging.error("to many process")
-                        
-                        if IPadr == "" and PID == "":
-                            retdata = {"gamestatus":"FALSE", "gameIP":IPadr, "PID":PID}
-                        else:
-                            retdata = {"gamestatus":"TRUE", "gameIP":IPadr, "PID":PID}
-                        self.request.sendall(json.dumps(retdata).encode('utf-8'))
+                    gameID = self.brokercmd["gameId"]
+                    exmode = self.brokercmd["excuteMode"]
+                    config = self.brokercmd["configfile"]
+                    logging.info(f"Now game number : {len(nowgame)}")
+                    game = excute_game()
+                    if len(nowgame) == 0:
+                        game.set_config(config, exmode)
+                        IPadr = game.get_IP()
+                        PID = game.get_PID()
+                        nowgame = (PID,)
+                    elif len(nowgame) == 1:
+                        os.system(f"taskkill /F /PID {nowgame[0]}")
+                        game.set_config(config, exmode)
+                        IPadr = game.get_IP()
+                        PID = nowgame[0]
+                        nowgame = (PID,)
+                    else:
+                        logging.error("to many process")
+
+                    if IPadr == "" and PID == "":
+                        retdata = {"gamestatus": "FALSE",
+                                   "gameIP": IPadr, "PID": PID}
+                    else:
+                        retdata = {"gamestatus": "TRUE",
+                                   "gameIP": IPadr, "PID": PID}
+
                 elif "gamename" and "excuteMode" in self.brokercmd:
                     gname = self.brokercmd["gamename"]
                     exmode = self.brokercmd["excuteMode"]
-                    config_editor.create_new(gname, mode = exmode).create()
+                    config_editor.create_new(gname, mode=exmode).create()
 
-
+                    retdata = {}
 
                 else:
-                    logging.warnings("api can't recognize args")
+                    logging.warnings("server can't recognize args")
+
+                self.request.sendall(json.dumps(retdata).encode('utf-8'))
             else:
                 logging.error("didn't receive by broker")
                 break
+
 
 '''
 class system_monitor:
@@ -117,10 +129,9 @@ class system_monitor:
         pass
 '''
 
-if __name__ == "__main__":# server_socket
+if __name__ == "__main__":  # server_socket
     PORT = 8000
     ADDR = (IPadrr, PORT)
     server = ThreadingTCPServer(ADDR, Handler)
     logging.info("server_socket start")
     server.serve_forever()
-

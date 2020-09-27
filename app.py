@@ -7,11 +7,13 @@ import remote_control
 app = Flask(__name__)
 CORS(app)
 server_ip = ("192.168.43.196",)
-server_status = {server_ip[0]:""}
+server_status = {server_ip[0]: ""}
+
 
 @app.route("/")
 def home():
     return "broker for gaminganywhere"
+
 
 @app.route('/TEST', methods=['GET', 'POST'])
 def test():
@@ -48,10 +50,11 @@ def startGame():
             return jsonify(result)
         else:
             logging.warning("server is full !!!")
-            return jsonify({"gamestatus":"FULL", "gameIP":"", "PID":""})
+            return jsonify({"gamestatus": "FULL", "gameIP": "", "PID": ""})
+
 
 @app.route('/End', methods=['GET'])
-def endGame(): 
+def endGame():
     global server_status
     exmode = request.args.get("excuteMode", type=str)
     serverip = request.args.get("serverip", type=str)
@@ -59,7 +62,7 @@ def endGame():
     remote_status = remote_control.remote(serverip).taskkill(exmode, pid)
 
     if remote_status == 0:
-        server_status[serverip ] = ""
+        server_status[serverip] = ""
         return jsonify(gamestatus="end game sucessful")
     else:
         return jsonify(gamestatus="failed")
@@ -67,14 +70,13 @@ def endGame():
 
 @app.route('/Add', methods=['GET'])
 def newgame():
-    gname = request.form.get('gamename', type=str)
-    CREAT = dict(request.args)
+    CREATE = dict(request.args)
     for i in server_ip:
         config = remote_control.client_socket(i)
-        result = config.control(**CREAT)
+        result = config.control(**CREATE)
 
     return f"{gname}" + "create sucess"
-    
+
 
 @app.route('/Conf', methods=['POST'])
 def config():
@@ -86,22 +88,23 @@ def config():
     if 'include' in str(EDIT):
         for k, v in EDIT.items():
             if 'include' in str(k):
-                COMME[k]=v
+                COMME[k] = v
                 EDIT.pop(k)
     if para != {}:
         pass
     else:
         for i in server_ip:
             config = remote_control.client_socket(i)
-            result1 = config.control(**{"gamename":gname})
+            result1 = config.control(**{"gamename": gname})
             if EDIT != {}:
                 logging.debug("edit : " + f"{EDIT}")
-                result2 =config.control(**EDIT)
+                result2 = config.control(**EDIT)
             if COMME != {}:
                 logging.debug("comment : " + f"{COMME}")
-                result3 =config.control(**COMME)
+                result3 = config.control(**COMME)
 
     return "get form"
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

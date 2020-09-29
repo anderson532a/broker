@@ -4,7 +4,7 @@ import time
 import json
 import logging
 
-_account = {"192.168.43.196":"RD"}
+_account = {"192.168.43.226":"RD"}
 _pwd = {'RD':'Aa123456'}
 
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -21,9 +21,9 @@ class remote:
     def taskkill(self, exmode, pid):
       self.exmode = exmode
       self.killpid = pid
-      self.cmd = session.run_cmd(f"taskkill /F /PID {self.killpid}" )
+      self.cmd = self.session.run_cmd(f"taskkill /F /PID {self.killpid}" )
       if exmode == "periodic":
-        session.run_cmd(f"taskkill /F /IM ga-server-periodic.exe" )
+        self.session.run_cmd(f"taskkill /F /IM ga-server-periodic.exe" )
       
       return self.cmd.status_code
 
@@ -46,6 +46,9 @@ class client_socket:
     msg = self.client.recv(1024).decode('utf-8')
     logging.info("client receive = ", msg)
     return json.loads(msg)
+  
+  def sendfile(self):
+    pass
 
 '''
 if __name__ == "__main__":

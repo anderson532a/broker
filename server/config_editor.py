@@ -76,13 +76,16 @@ class create_new:
                 logging.debug("write mode x, create new"+ f"{self.name}")
                 fx.write(template.read_text())
                 fx.seek(0,0)
-                fx.write(f"# configuration for {self.name}"+"\n")
+                fx.write(f"# configuration for {self.name}" + "\n")
+                logging.info("new create sucess")
+                return "TRUE"
         except FileExistsError:
-            logging.error("file already exist!! try edit", exc_info=True)
+            logging.error("file already exist", exc_info=True)
+            return "FALSE"
 
-    def add(self):
-        pass
-
+class unpackzip:
+    def __init__(self):
+        
 
 
 '''

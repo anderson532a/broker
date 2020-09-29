@@ -110,9 +110,9 @@ class Handler(BaseRequestHandler):
                 elif "gamename" and "excuteMode" in self.brokercmd:
                     gname = self.brokercmd["gamename"]
                     exmode = self.brokercmd["excuteMode"]
-                    config_editor.create_new(gname, mode=exmode).create()
+                    NEWmes = config_editor.create_new(gname, mode=exmode).create()
 
-                    retdata = {}
+                    retdata = {f"{IPadrr}": NEWmes}
 
                 else:
                     logging.warnings("server can't recognize args")

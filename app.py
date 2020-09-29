@@ -5,8 +5,9 @@ import logging
 import remote_control
 
 app = Flask(__name__)
+ALLOWED_EXTENSIONS = set(['zip'])
 CORS(app)
-server_ip = ("192.168.43.196",)
+server_ip = ("192.168.43.226",)
 server_status = {server_ip[0]: ""}
 
 
@@ -68,14 +69,26 @@ def endGame():
         return jsonify(gamestatus="failed")
 
 
-@app.route('/Add', methods=['GET'])
+@app.route('/Add', methods=['GET', 'POST'])
 def newgame():
-    CREATE = dict(request.args)
-    for i in server_ip:
-        config = remote_control.client_socket(i)
-        result = config.control(**CREATE)
+    if request.method == 'GET':
+        CREATE = dict(request.args)
+        result = {}
+        for i in server_ip:
+            config = remote_control.client_socket(i)
+            result.update(config.control(**CREATE))
+        
+        if "false" in result.items():
+            return {"gamestatus": "FALSE try edit"}
+        else:
+            return {"gamestatus": "TRUE"}
+    else:
+        Zip = request.files['file']
+        
 
-    return f"{gname}" + "create sucess"
+        return f"get {Zip.filename}"
+
+
 
 
 @app.route('/Conf', methods=['POST'])
@@ -83,25 +96,23 @@ def config():
     gname = request.form.get('gamename', type=str)
     EDIT = dict(request.form)
     del EDIT['gamename']
-    para = dict(request.args)
+    para = dict(request.args) # with other parameter
     COMME = {}
     if 'include' in str(EDIT):
         for k, v in EDIT.items():
             if 'include' in str(k):
                 COMME[k] = v
                 EDIT.pop(k)
-    if para != {}:
-        pass
-    else:
-        for i in server_ip:
-            config = remote_control.client_socket(i)
-            result1 = config.control(**{"gamename": gname})
-            if EDIT != {}:
-                logging.debug("edit : " + f"{EDIT}")
-                result2 = config.control(**EDIT)
-            if COMME != {}:
-                logging.debug("comment : " + f"{COMME}")
-                result3 = config.control(**COMME)
+   
+    for i in server_ip:
+        config = remote_control.client_socket(i)
+        result1 = config.control(**{"gamename": gname})
+        if EDIT != {}:
+            logging.debug("edit : " + f"{EDIT}")
+            result2 = config.control(**EDIT)
+        if COMME != {}:
+            logging.debug("comment : " + f"{COMME}")
+            result3 = config.control(**COMME)
 
     return "get form"
 

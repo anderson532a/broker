@@ -3,8 +3,9 @@ import socket
 import time
 import json
 import logging
+import SQL_connect
 
-_account = {"192.168.43.226":"RD"}
+_account = {"192.168.43.196":"RD"}
 _pwd = {'RD':'Aa123456'}
 
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"

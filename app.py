@@ -1,13 +1,12 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import SQL_connect
 import logging
 import remote_control
 
 app = Flask(__name__)
 ALLOWED_EXTENSIONS = set(['zip'])
 CORS(app)
-server_ip = ("192.168.43.226",)
+server_ip = ("192.168.43.196", )
 server_status = {server_ip[0]: ""}
 
 
@@ -71,7 +70,17 @@ def endGame():
 
 @app.route('/Add', methods=['GET', 'POST'])
 def newgame():
-    if request.method == 'GET':
+    if request.method == 'POST':
+        gname = request.form.get('gamename', type=str)
+        if not 'file' in request.files:
+            logging.error("request with no file")
+            return "no file, please try again"
+
+        Zip = request.files['file']
+        logging.info(f"API get zip : {Zip.filename}")
+
+        return "upload zip sucessful"
+    else:
         CREATE = dict(request.args)
         result = {}
         for i in server_ip:
@@ -82,13 +91,6 @@ def newgame():
             return {"gamestatus": "FALSE try edit"}
         else:
             return {"gamestatus": "TRUE"}
-    else:
-        Zip = request.files['file']
-        
-
-        return f"get {Zip.filename}"
-
-
 
 
 @app.route('/Conf', methods=['POST'])
@@ -119,3 +121,4 @@ def config():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
+

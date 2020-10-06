@@ -82,10 +82,10 @@ class create_new:
         except FileExistsError:
             logging.error("file already exist", exc_info=True)
             return "FALSE"
-
+'''
 class unpackzip:
     def __init__(self):
-        
+'''
 
 
 '''

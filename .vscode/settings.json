@@ -2,6 +2,5 @@
     "python.dataScience.jupyterServerURI": "local",
     "python.autoComplete.extraPaths": ["//server"
 
-    ],
-    "python.pythonPath": "env\\Scripts\\python.exe"
+    ]
 }

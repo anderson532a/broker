@@ -1,73 +1,57 @@
 import MySQLdb
-'''old data
-gamedb = MySQLdb.connect(host="compalgame.cvtg5m1xenqd.us-east-1.rds.amazonaws.com",
-                       user="applecatcar", 
-                       passwd="redorange",
-                       db="gamedb"
-                       )
-'''
+
 gamedb = MySQLdb.connect(host="localhost",
-                         user="root",
-                         passwd="Aa123456",
+                         user="server",
+                         passwd="jasmine",
                          db="gamedb"
                          )
 
 cur = gamedb.cursor()
-default = {"config_fix", "config_mapping",
-           "config_changable", "gameslist", " gaconnection"}
+default = ("gaconnection", "config_data", "gameslist")
 
 
-class SQL_CMD:
-    def __init__(self, CMD, table=default):
+class _SQL_CMD:
+    def __init__(self, CMD, table = default):
         self.CMD = CMD
         self.table = table
 
-    def Tables(self):
-        if self.table == {}:
-            print("empty talbe")
-        else:
-            print(f"show table = {self.table}")
-        return self.table
-
     def execute(self):
         cur.execute(self.CMD)
-        gamedb.commit()
-
+        
     def close(self):
         cur.close()
         gamedb.close()
 
-
 # read info from MySQL
 
-class readSQL(SQL_CMD):
+class readSQL(_SQL_CMD):
     def __init__(self):
-        self.CMD1 = f"select {self.item} from {self.Table}"
+        self.CMD1 = f"select {', '.join(i for i in self.item)} from {self.Table}"
 
-    def select(self, item, num=0, w1=None, w2=None):
+    def select(self, num=0, *item, **condi):
         self.item = item
         self.Table = self.table[num]
-        self.w1 = w1
-        self.w2 = w2
+        self.condi = condi
         try:
-            if self.w1 != None & self.w2 != None:
-                self.CMD = self.CMD1 + f" where {self.w1}={self.w2}"
+            if self.condi != {} :
+                for k, v in self.condi.items():
+                    self.CMD = self.CMD1 + f" where {k}={v}"
             else:
                 self.CMD = self.CMD1
             super().execute()
+            read = cur.fetchall()
+            return read
         except:
             pass
         finally:
             super().close()
-
 
 '''
     def join(self):
 
 '''
 
-
-class writeSQL(SQL_CMD):
+class writeSQL(_SQL_CMD):
     def __init__(self):
         self.CMD1 = f"insert into {self.Table} ({self.columns})"
         self.CMD2 = f"values ({self.values})"
@@ -92,6 +76,7 @@ class writeSQL(SQL_CMD):
                 self.columns = self.columns + K
             self.CMD = self.CMD1  + self.CMD2
             super().execute()
+            gamedb.commit()
         except:
             pass
         finally:
@@ -112,6 +97,7 @@ class writeSQL(SQL_CMD):
             self.set = CCMD
             self.CMD = self.CMD3
             super().execute()
+            gamedb.commit()
         except:
             pass
         finally:
@@ -119,7 +105,10 @@ class writeSQL(SQL_CMD):
 
 
 
-#
-'''
 if __name__ == "__main__":
-'''
+    cur.execute("SELECT * FROM gaconnection")
+    results = cur.fetchall()
+    print(type(results))
+    for i in results:
+        print(i[4])
+

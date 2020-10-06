@@ -6,7 +6,7 @@ import time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
 import logging
 import json
-import config_editor
+import config_editor, SQL_connect
 
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -20,6 +20,7 @@ TER = "taskkill /F /IM "
 hostname = socket.gethostname()
 IPadrr = socket.gethostbyname(hostname)
 nowgame = ()
+gamepid = {} # {nowgame[]: gamename}
 IP = ""
 FORMAT = "%(asctime)s %(levelname)s:%(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
@@ -69,6 +70,15 @@ class excute_game:
             logging.info("lost pid")
         return self.pid
 
+class sync_DB:
+    def __init__(self): 
+        self.S = SQL_connect.readSQL()
+        self.I = SQL_connect.writeSQL()
+        self.U = SQL_connect.update()
+    def game_check(self, IP, PID):
+        Check = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
+
+
 
 class Handler(BaseRequestHandler):
     def handle(self):
@@ -84,19 +94,27 @@ class Handler(BaseRequestHandler):
                     gameID = self.brokercmd["gameId"]
                     exmode = self.brokercmd["excuteMode"]
                     config = self.brokercmd["configfile"]
+                    gamename = config.split('.')[1]
                     logging.info(f"Now game number : {len(nowgame)}")
                     game = excute_game()
                     if len(nowgame) == 0:
                         game.set_config(config, exmode)
                         IPadr = game.get_IP()
                         PID = game.get_PID()
-                        nowgame = (PID,)
+                        nowgame = (PID, )
+                        gamepid = {nowgame[0]: gamename}
+                        logging.info(f"{gamepid}")
                     elif len(nowgame) == 1:
-                        os.system(f"taskkill /F /PID {nowgame[0]}")
-                        game.set_config(config, exmode)
-                        IPadr = game.get_IP()
-                        PID = nowgame[0]
-                        nowgame = (PID,)
+                        if gamename in nowgame.values():
+                            pass
+                        else:
+                            os.system(f"taskkill /F /PID {nowgame[0]}")
+                            game.set_config(config, exmode)
+                            IPadr = game.get_IP()
+                            PID = game.get_PID()
+                            nowgame = (PID,)
+                            gamepid = {nowgame[0]: gamename}
+                            logging.info(f"{gamepid}")
                     else:
                         logging.error("to many process")
 
@@ -111,7 +129,6 @@ class Handler(BaseRequestHandler):
                     gname = self.brokercmd["gamename"]
                     exmode = self.brokercmd["excuteMode"]
                     NEWmes = config_editor.create_new(gname, mode=exmode).create()
-
                     retdata = {f"{IPadrr}": NEWmes}
 
                 else:
@@ -122,12 +139,6 @@ class Handler(BaseRequestHandler):
                 logging.error("didn't receive by broker")
                 break
 
-
-'''
-class system_monitor:
-    def __init__(self):
-        pass
-'''
 
 if __name__ == "__main__":  # server_socket
     PORT = 8000

@@ -3,7 +3,7 @@ import socket
 import time
 import json
 import logging
-import SQL_connect
+# import SQL_connect
 
 _account = {"192.168.43.196":"RD"}
 _pwd = {'RD':'Aa123456'}

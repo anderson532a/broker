@@ -53,7 +53,7 @@ class excute_game:
             self.status = os.system(_CMD)
             # except FileNotFoundError:    #not find file
         if self.status == 0:
-            logging.info("game excuted")
+            logging.info(f" {Name} game excuted")
         else:
             logging.info("game failed")
 
@@ -65,7 +65,7 @@ class excute_game:
 
     def get_PID(self):
         if self.pid != "":
-            logging.info("get pid")
+            logging.info(f"get pid : {self.pid}")
         else:
             logging.info("lost pid")
         return self.pid
@@ -75,8 +75,36 @@ class sync_DB:
         self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
         self.U = SQL_connect.update()
-    def game_check(self, IP, PID):
-        Check = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
+    
+    def game_check(self, name, PID):
+        Data = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
+        for line in Data:
+            if 'TRUE' in line:
+                if line[1] == PID:
+                    logging.info("check PID correct")
+                    if line[0] == name:
+                        logging.info("check gamename correct")
+                        return "TTT"
+                    else:
+                        logging.info("check gamename different")
+                        return "TTF"
+                else:
+                    logging.info("check PID different")
+                    return "TF"
+        logging.info("no playing game on DB")
+        return "F"
+    def modifyDB(self, arg):
+        if arg == "TTF":
+    
+
+    def autosync(self):
+        pass
+    
+    
+
+
+
+
 
 
 
@@ -105,7 +133,7 @@ class Handler(BaseRequestHandler):
                         gamepid = {nowgame[0]: gamename}
                         logging.info(f"{gamepid}")
                     elif len(nowgame) == 1:
-                        if gamename in nowgame.values():
+                        if gamename in gamepid.values():
                             pass
                         else:
                             os.system(f"taskkill /F /PID {nowgame[0]}")
@@ -114,7 +142,7 @@ class Handler(BaseRequestHandler):
                             PID = game.get_PID()
                             nowgame = (PID,)
                             gamepid = {nowgame[0]: gamename}
-                            logging.info(f"{gamepid}")
+                            logging.info(f"kill pid {gamepid}")
                     else:
                         logging.error("to many process")
 

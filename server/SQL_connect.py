@@ -1,4 +1,5 @@
 import MySQLdb
+import logging
 
 gamedb = MySQLdb.connect(host="localhost",
                          user="server",
@@ -8,10 +9,11 @@ gamedb = MySQLdb.connect(host="localhost",
 
 cur = gamedb.cursor()
 default = ("gaconnection", "config_data", "gameslist")
+FORMAT = "%(asctime)s %(levelname)s:%(message)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
-
-class _SQL_CMD:
-    def __init__(self, CMD, table = default):
+class SQL_CMD:
+    def __init__(self, CMD = "", table = default):
         self.CMD = CMD
         self.table = table
 
@@ -24,22 +26,26 @@ class _SQL_CMD:
 
 # read info from MySQL
 
-class readSQL(_SQL_CMD):
+class readSQL(SQL_CMD):
     def __init__(self):
-        self.CMD1 = f"select {', '.join(i for i in self.item)} from {self.Table}"
+        super().__init__()
 
-    def select(self, num=0, *item, **condi):
-        self.item = item
+    def select(self, *Item, num=0, **condi):
+        self.Item = ', '.join(i for i in Item)
         self.Table = self.table[num]
         self.condi = condi
+        self.CMD1 = f"select {self.Item} from {self.Table}"
         try:
             if self.condi != {} :
                 for k, v in self.condi.items():
-                    self.CMD = self.CMD1 + f" where {k}={v}"
+                    self.CMD = self.CMD1 + f" where {k}=\"{v}\""
+                    logging.debug(f"CMD : {self.CMD}")
             else:
                 self.CMD = self.CMD1
+                logging.debug(f"CMD : {self.CMD}")
             super().execute()
             read = cur.fetchall()
+            logging.debug(f"data : {read}")  # tuple with tuple
             return read
         except:
             pass
@@ -51,14 +57,14 @@ class readSQL(_SQL_CMD):
 
 '''
 
-class writeSQL(_SQL_CMD):
+class writeSQL(SQL_CMD):
     def __init__(self):
         self.CMD1 = f"insert into {self.Table} ({self.columns})"
         self.CMD2 = f"values ({self.values})"
 
         self.CMD3 = f"update {self.Table} set {self.set} where {self.col}={self.val}"
 
-    def insert(self, num=0,  **newitem):
+    def insert(self, num=0, **newitem):
         self.Table = self.table[num]
         self.new = newitem
         try:
@@ -104,11 +110,12 @@ class writeSQL(_SQL_CMD):
             super().close()
 
 
-
+'''
 if __name__ == "__main__":
-    cur.execute("SELECT * FROM gaconnection")
-    results = cur.fetchall()
+    A = readSQL()
+    results = A.select("gamename", "pid", "status", **{"serverIp":"192.168.43.196"})
+    
     print(type(results))
     for i in results:
-        print(i[4])
-
+        print(i)
+'''

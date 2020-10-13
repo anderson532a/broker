@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import logging
 import remote_control
+FORMAT = "%(asctime)s %(levelname)s:%(message)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
 app = Flask(__name__)
 ALLOWED_EXTENSIONS = set(['zip'])
@@ -68,7 +70,7 @@ def endGame():
         return jsonify(gamestatus="failed")
 
 
-@app.route('/Add', methods=['GET', 'POST'])
+@app.route('/Add', methods=['POST'])
 def newgame():
     if request.method == 'POST':
         gname = request.form.get('gamename', type=str)
@@ -97,11 +99,13 @@ def newgame():
 def config():
     gname = request.form.get('gamename', type=str)
     EDIT = dict(request.form)
+    logging.debug(f"{EDIT}")
     del EDIT['gamename']
-    para = dict(request.args) # with other parameter
+    para = dict(request.args) # if with other parameter
     COMME = {}
     if 'include' in str(EDIT):
-        for k, v in EDIT.items():
+        EDIT2 = EDIT.copy()
+        for k, v in EDIT2.items():
             if 'include' in str(k):
                 COMME[k] = v
                 EDIT.pop(k)
@@ -116,7 +120,7 @@ def config():
             logging.debug("comment : " + f"{COMME}")
             result3 = config.control(**COMME)
 
-    return "get form"
+    return "get config form"
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ gamedb = MySQLdb.connect(host="localhost",
                          passwd="jasmine",
                          db="gamedb"
                          )
-
+gamedb.ping(True)
 cur = gamedb.cursor()
 default = ("gaconnection", "config_data", "gameslist")
 FORMAT = "%(asctime)s %(levelname)s:%(message)s"
@@ -45,28 +45,24 @@ class readSQL(SQL_CMD):
                 logging.debug(f"CMD : {self.CMD}")
             super().execute()
             read = cur.fetchall()
-            logging.debug(f"data : {read}")  # tuple with tuple
+            for i in read:
+                logging.debug(f"{i}")  # tuple with tuple
             return read
         except:
-            pass
-        finally:
             super().close()
 
-'''
     def join(self):
-
-'''
+        pass
 
 class writeSQL(SQL_CMD):
     def __init__(self):
-        self.CMD1 = f"insert into {self.Table} ({self.columns})"
-        self.CMD2 = f"values ({self.values})"
-
-        self.CMD3 = f"update {self.Table} set {self.set} where {self.col}={self.val}"
-
+        super().__init__()
+        
     def insert(self, num=0, **newitem):
         self.Table = self.table[num]
         self.new = newitem
+        self.CMD1 = f"insert into {self.Table} ({self.columns})"
+        self.CMD2 = f"values ({self.values})"
         try:
             self.items = self.new.items()
             self.values = ""
@@ -84,38 +80,67 @@ class writeSQL(SQL_CMD):
             super().execute()
             gamedb.commit()
         except:
-            pass
-        finally:
+            logging.error("something wrong", exc_info=True)
+            # cur.execute("SET SQL_SAFE_UPDATES=0")
             super().close()
 
-    def update(self, num=1, col="", val="", **newitem):
+# newitem : set ; col、val :  where
+    def update(self, num = 0, col = "", val = "", **newitem):
         self.new = newitem
         self.Table = self.table[num]
+        self.col = col
+        self.val = val
         try:
             self.items = self.new.items()
             CCMD = ""
             for key, val in self.items:
                 if CCMD == "":
-                    CCMD = f"{key}={val}"
+                    CCMD = f"{key}=\"{val}\""
                 else:
-                    ST = f", {key}={val}"
+                    ST = f", {key}=\"{val}\""
                     CCMD = CCMD + ST
             self.set = CCMD
-            self.CMD = self.CMD3
+            self.CMD = f"update {self.Table} set {self.set} where {self.col}=\"{self.val}\""
+            logging.info(f"CMD : {self.CMD}")
             super().execute()
             gamedb.commit()
+            logging.info("update commit sucessful")
         except:
-            pass
-        finally:
+            logging.error("something wrong", exc_info=True)
+            #cur.execute("SET SQL_SAFE_UPDATES=0")
             super().close()
+            
 
+    def delete(self):
+        pass
 
 '''
 if __name__ == "__main__":
     A = readSQL()
+    B = writeSQL()
     results = A.select("gamename", "pid", "status", **{"serverIp":"192.168.43.196"})
-    
     print(type(results))
-    for i in results:
-        print(i)
+    ppid = ''
+    for line in reversed(results):
+        # 確認SERVER status同步
+        if '12528' in line:
+            if line[2] == 'TRUE':
+                print("T")
+            else:
+                print("F")
+        # 檢查DB status
+        if 'TRUE' in line:
+            if line[1] == '12528':
+                print("TT")
+            else:
+                print("FF")
+        # 重複PID
+        if line[1] == ppid and ppid != '':
+            print("DD")
+            print(line)
+                
+        ppid = line[1]
 '''
+
+        
+        

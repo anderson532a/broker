@@ -1,6 +1,6 @@
 import os
 import sys
-import subprocess
+import subprocess, psutil
 import socket
 import time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
@@ -71,46 +71,39 @@ class excute_game:
         return self.pid
 
 class sync_DB:
-    def __init__(self): 
+    def __init__(self, PID): 
         self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
-        self.U = SQL_connect.update()
-    
-    def game_check(self, name, PID):
+        self.pid = PID
+
+    def pid_check(self):
+        if psutil.pid_exists(self.pid) != True:
+            self.I.update(col="pid", val = self.pid, **{"status":"FALSE"})
+        logging.info("pid check")
+
+    def gameDB_check(self):
+        # select gamename, pid, status,  from gaconnection where serverIp = IPadrr
         Data = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
-        for line in Data:
+        ppid = ''
+        for line in reversed(Data):
+            # 檢查DB status
             if 'TRUE' in line:
-                if line[1] == PID:
-                    logging.info("check PID correct")
-                    if line[0] == name:
-                        logging.info("check gamename correct")
-                        return "TTT"
-                    else:
-                        logging.info("check gamename different")
-                        return "TTF"
+                if line[1] == self.pid:
+                    logging.info('server & DB pid sync')
                 else:
-                    logging.info("check PID different")
-                    return "TF"
-        logging.info("no playing game on DB")
-        return "F"
-    def modifyDB(self, arg):
-        if arg == "TTF":
-    
+                    logging.info('server & DB double TRUE')
+                    # update gaconnection set status='FALSE' where PID=self.pid
+                    self.I.update(col="pid", val = line[1], **{"status":"FALSE"})
+            # 重複PID
+            if line[1] == ppid:
+                logging.info('DB has double pid')
+ 
 
-    def autosync(self):
-        pass
-    
-    
-
-
-
-
-
-
-
+                      
 class Handler(BaseRequestHandler):
     def handle(self):
         global nowgame
+        SYN = sync_DB()
         while True:
             self.data = self.request.recv(1024).strip()
             logging.debug(f"send length = {len(self.data)}")
@@ -125,6 +118,7 @@ class Handler(BaseRequestHandler):
                     gamename = config.split('.')[1]
                     logging.info(f"Now game number : {len(nowgame)}")
                     game = excute_game()
+
                     if len(nowgame) == 0:
                         game.set_config(config, exmode)
                         IPadr = game.get_IP()
@@ -132,6 +126,7 @@ class Handler(BaseRequestHandler):
                         nowgame = (PID, )
                         gamepid = {nowgame[0]: gamename}
                         logging.info(f"{gamepid}")
+
                     elif len(nowgame) == 1:
                         if gamename in gamepid.values():
                             pass
@@ -143,6 +138,7 @@ class Handler(BaseRequestHandler):
                             nowgame = (PID,)
                             gamepid = {nowgame[0]: gamename}
                             logging.info(f"kill pid {gamepid}")
+
                     else:
                         logging.error("to many process")
 

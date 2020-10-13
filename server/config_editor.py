@@ -1,8 +1,7 @@
 import os
 import logging
 from pathlib import Path
-FORMAT = "%(asctime)s %(levelname)s:%(message)s"
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+import SQL_connect
 
 c = ".config"
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\"

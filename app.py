@@ -2,8 +2,6 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import logging
 import remote_control
-FORMAT = "%(asctime)s %(levelname)s:%(message)s"
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
 app = Flask(__name__)
 ALLOWED_EXTENSIONS = set(['zip'])

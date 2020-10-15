@@ -4,6 +4,8 @@ import time
 import json
 import logging
 # import SQL_connect
+FORMAT = "%(asctime)s %(levelname)s:%(message)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
 _account = {"192.168.43.196":"RD"}
 _pwd = {'RD':'Aa123456'}

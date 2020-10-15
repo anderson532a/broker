@@ -1,4 +1,4 @@
-import os
+import os, threading
 import sys
 import subprocess, psutil
 import socket
@@ -69,17 +69,28 @@ class excute_game:
         else:
             logging.info("lost pid")
         return self.pid
+    
+    def auto(self, A ,B):
+        self.set_config(A, B)
+        IPadr = self.get_IP()
+        PID = self.get_PID()
+        return [IPadr, PID]
 
-class sync_DB:
-    def __init__(self, PID): 
+
+class sync_DB(threading.thread):
+    def __init__(self, PID):
+        
         self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
         self.pid = PID
 
+    # 同步DB PID 狀態
     def pid_check(self):
         if psutil.pid_exists(self.pid) != True:
+            logging.info("pid diff & change")
             self.I.update(col="pid", val = self.pid, **{"status":"FALSE"})
-        logging.info("pid check")
+        else:
+            logging.info("pid check")
 
     def gameDB_check(self):
         # select gamename, pid, status,  from gaconnection where serverIp = IPadrr
@@ -97,13 +108,37 @@ class sync_DB:
             # 重複PID
             if line[1] == ppid:
                 logging.info('DB has double pid')
- 
+
+    def gameDBthread(self):
+        t = threading.currentThread()
+        while getattr(t, "loop", True):
+            self.gameDB_check()
+            time.sleep(20)
+
+    def pidthread(self):
+        t = threading.currentThread()
+        while getattr(t, "loop", True):
+            self.pid_check()
+            time.sleep(5)
+
+    def childthread(self, W):
+        if W == "p":
+            self.T = threading.Thread(target = self.pidthread())
+        else:
+            self.T = threading.Thread(target = self.gameDBthread())
+        self.T.setDaemon(True)
+        self.T.start()
+    
+    def stopthread(self):
+        self.T.loop = False
+
+
 
                       
 class Handler(BaseRequestHandler):
     def handle(self):
-        global nowgame
-        SYN = sync_DB()
+        global nowgame, gampid
+        global SYN1, SYN2
         while True:
             self.data = self.request.recv(1024).strip()
             logging.debug(f"send length = {len(self.data)}")
@@ -120,23 +155,26 @@ class Handler(BaseRequestHandler):
                     game = excute_game()
 
                     if len(nowgame) == 0:
-                        game.set_config(config, exmode)
-                        IPadr = game.get_IP()
-                        PID = game.get_PID()
-                        nowgame = (PID, )
-                        gamepid = {nowgame[0]: gamename}
-                        logging.info(f"{gamepid}")
+                        [IPadr, PID]= game.auto(config, exmode)
+                        if PID != "":
+                            nowgame = (PID, )
+                            gamepid = {nowgame[0]: gamename}
+                            SYN = 
+                            sync_DB(PID).childthread("p")
+                            sync_DB(PID).childthread("g")
+                            logging.info(f"now game: {gamepid}")
 
                     elif len(nowgame) == 1:
                         if gamename in gamepid.values():
                             pass
                         else:
                             os.system(f"taskkill /F /PID {nowgame[0]}")
-                            game.set_config(config, exmode)
-                            IPadr = game.get_IP()
-                            PID = game.get_PID()
+                            SYN1
+                            SYN2
+                            [IPadr, PID]= game.auto(config, exmode)
                             nowgame = (PID,)
                             gamepid = {nowgame[0]: gamename}
+
                             logging.info(f"kill pid {gamepid}")
 
                     else:

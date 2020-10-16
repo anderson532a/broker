@@ -42,21 +42,45 @@ class client_socket:
       
 
   def control(self, **cmd):
-    self.cmd = cmd
-    jsonobj = json.dumps(self.cmd)
+
+    jsonobj = json.dumps(cmd)
     self.client.sendall(jsonobj.encode('utf-8'))
     logging.info("client send = ", jsonobj)
     msg = self.client.recv(1024).decode('utf-8')
     logging.info("client receive = ", msg)
     return json.loads(msg)
   
-  def sendfile(self):
-    pass
+  def sendfile(self, filename):
 
-'''
+    try:
+      with open (filename, 'rb')as rb:
+        logging.info("file opened")
+
+        data = rb.read(1024)
+        while (data):
+          self.client.send(data)
+          logging.info("client sending file ....")
+          data = rb.read(1024)
+        logging.info("send file done")
+        self.client.send("done".encode('utf-8'))
+
+      msg = self.client.recv(1024).decode('utf-8')
+      logging.info("client receive = ", msg)
+      return json.loads(msg)
+
+    except:
+      logging.error("file error", exc_info=True)
+
+
+
+
 if __name__ == "__main__":
-    A = client_socket("AndersonCJ_Chen")
-    api = {"gameId":123, "excutemode":"periodic", "configfile":"server.PlatformerGame.conf"}
-    B = A.control(**api)
-    print(B)
-'''
+
+  A = client_socket("AndersonCJ_Chen")
+  #A.client.send("done".encode('utf-8'))
+  #api = {"gameId":123, "excutemode":"periodic"}
+  #B = A.control(**api)
+    
+    
+  C = A.sendfile("ABC.zip")
+

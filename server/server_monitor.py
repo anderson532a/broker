@@ -77,9 +77,8 @@ class excute_game:
         return [IPadr, PID]
 
 
-class sync_DB(threading.thread):
+class sync_DB(threading.Thread):
     def __init__(self, PID):
-        
         self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
         self.pid = PID
@@ -133,18 +132,31 @@ class sync_DB(threading.thread):
         self.T.loop = False
 
 
-
-                      
 class Handler(BaseRequestHandler):
     def handle(self):
         global nowgame, gampid
         global SYN1, SYN2
         while True:
             self.data = self.request.recv(1024).strip()
-            logging.debug(f"send length = {len(self.data)}")
-            if len(self.data) > 0:
+            logging.info(f"send length = {len(self.data)}")
+            logging.debug(f"send data = {self.data}")
+
+            if len(self.data) > 100 or self.data == "done".encode():
+                raw = self.data
+                logging.debug(f"server receive file")
+                try:
+                    with open ("receive.zip", "wb") as wb:
+                        while raw != "done".encode():
+                            logging.debug(f"server writing file....")
+                            wb.write(raw)
+                    logging.info("file sending finish")
+                    
+                except:
+                    logging.error("file error", exc_info=True)
+                
+            elif len(self.data) > 0 and len(self.data) < 100:
                 raw = self.data.decode('utf-8')
-                logging.info(f"server receive =  {raw}")
+                logging.debug(f"server receive =  {raw}")
                 self.brokercmd = json.loads(raw)
                 if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
                     gameID = self.brokercmd["gameId"]
@@ -159,7 +171,6 @@ class Handler(BaseRequestHandler):
                         if PID != "":
                             nowgame = (PID, )
                             gamepid = {nowgame[0]: gamename}
-                            SYN = 
                             sync_DB(PID).childthread("p")
                             sync_DB(PID).childthread("g")
                             logging.info(f"now game: {gamepid}")
@@ -169,8 +180,6 @@ class Handler(BaseRequestHandler):
                             pass
                         else:
                             os.system(f"taskkill /F /PID {nowgame[0]}")
-                            SYN1
-                            SYN2
                             [IPadr, PID]= game.auto(config, exmode)
                             nowgame = (PID,)
                             gamepid = {nowgame[0]: gamename}
@@ -187,16 +196,17 @@ class Handler(BaseRequestHandler):
                         retdata = {"gamestatus": "TRUE",
                                    "gameIP": IPadr, "PID": PID}
 
-                elif "gamename" and "excuteMode" in self.brokercmd:
+                elif "gamename" and "file" in self.brokercmd:
                     gname = self.brokercmd["gamename"]
-                    exmode = self.brokercmd["excuteMode"]
-                    NEWmes = config_editor.create_new(gname, mode=exmode).create()
-                    retdata = {f"{IPadrr}": NEWmes}
+                    self.filename = self.brokercmd["file"]
+                    NEWmes = config_editor.create_new(name = gname).create()
+                    retdata = {f"{IPadrr}": NEWme}
 
                 else:
                     logging.warnings("server can't recognize args")
 
                 self.request.sendall(json.dumps(retdata).encode('utf-8'))
+            
             else:
                 logging.error("didn't receive by broker")
                 break

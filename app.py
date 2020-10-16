@@ -69,29 +69,28 @@ def endGame():
 
 
 @app.route('/Add', methods=['POST'])
-def newgame():
-    if request.method == 'POST':
-        gname = request.form.get('gamename', type=str)
-        if not 'file' in request.files:
-            logging.error("request with no file")
-            return "no file, please try again"
-
+def addgame():
+    gname = request.form.get('gamename', type=str)
+    CONFIG = dict(request.form)
+    if 'file' not in request.files:
+        logging.error("request with no file")
+        return "no file, please try again"
+    else:
         Zip = request.files['file']
         logging.info(f"API get zip : {Zip.filename}")
-
-        return "upload zip sucessful"
-    else:
-        CREATE = dict(request.args)
+        CONFIG['file'] = f"{gname}.zip"
         result = {}
         for i in server_ip:
-            config = remote_control.client_socket(i)
-            result.update(config.control(**CREATE))
-        
-        if "false" in result.items():
-            return {"gamestatus": "FALSE try edit"}
-        else:
-            return {"gamestatus": "TRUE"}
+            upload = remote_control.client_socket(i)
+            result.update(upload.control(**CONFIG))
+            upload.sendfile(Zip.filename)
 
+        if "false" in result.items():
+            return {"status": "FALSE try edit"}
+        else:
+            return {"status": "TRUE"}
+    
+    
 
 @app.route('/Conf', methods=['POST'])
 def config():

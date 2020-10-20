@@ -1,8 +1,6 @@
 import winrm
 import socket
-import time
-import json
-import logging
+import logging, json, time
 # import SQL_connect
 FORMAT = "%(asctime)s %(levelname)s:%(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
@@ -42,45 +40,42 @@ class client_socket:
       
 
   def control(self, **cmd):
-
     jsonobj = json.dumps(cmd)
     self.client.sendall(jsonobj.encode('utf-8'))
-    logging.info("client send = ", jsonobj)
+    logging.info(f"client send = {jsonobj}" )
     msg = self.client.recv(1024).decode('utf-8')
-    logging.info("client receive = ", msg)
+    logging.info(f"client receive = {msg}")
     return json.loads(msg)
   
   def sendfile(self, filename):
-
+    self.client.send("sendfile".encode('utf-8'))
+    time.sleep(1)
     try:
       with open (filename, 'rb')as rb:
         logging.info("file opened")
-
         data = rb.read(1024)
-        while (data):
-          self.client.send(data)
-          logging.info("client sending file ....")
-          data = rb.read(1024)
-        logging.info("send file done")
-        self.client.send("done".encode('utf-8'))
+        self.client.sendall(data)
+        logging.info("client sending file ....")
+      self.client.send("done".encode('utf-8'))
+        # self.client.shutdown(socket.SHUT_WR)
+      logging.info("send file done")
 
       msg = self.client.recv(1024).decode('utf-8')
-      logging.info("client receive = ", msg)
-      return json.loads(msg)
+      logging.info(f"client receive = {msg}")
+      return msg
 
     except:
       logging.error("file error", exc_info=True)
 
 
 
-
+'''
 if __name__ == "__main__":
 
   A = client_socket("AndersonCJ_Chen")
-  #A.client.send("done".encode('utf-8'))
+  # A.client.send("done".encode('utf-8'))
   #api = {"gameId":123, "excutemode":"periodic"}
   #B = A.control(**api)
     
-    
   C = A.sendfile("ABC.zip")
-
+'''

@@ -43,15 +43,16 @@ def startGame():
     startapi = dict(request.args)
     conip = request.remote_addr
     for i in server_ip:
-        if server_status[i] == "":
-            game = remote_control.client_socket(i)
-            result = game.control(**startapi)
-            server_status[i] = conip
-            return jsonify(result)
+        # if server_status[i] == "":
+        game = remote_control.client_socket(i)
+        result = game.control(**startapi)
+        server_status[i] = conip
+        return jsonify(result)
+        '''
         else:
             logging.warning("server is full !!!")
             return jsonify({"gamestatus": "FULL", "gameIP": "", "PID": ""})
-
+'''
 
 @app.route('/End', methods=['GET'])
 def endGame():

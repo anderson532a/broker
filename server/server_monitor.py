@@ -1,5 +1,5 @@
-import os, threading
-import sys
+import os, threading, sys
+from zipfile import ZipFile
 import subprocess, psutil
 import socket
 import time
@@ -83,18 +83,24 @@ class sync_DB(threading.Thread):
         self.I = SQL_connect.writeSQL()
         self.pid = PID
 
-    # 同步DB PID 狀態
+    # 同步DB server 之 PID 狀態
     def pid_check(self):
-        if psutil.pid_exists(self.pid) != True:
+        logging.info('pid_check start')
+        if self.pid == '':
+            logging.info("NO game pid in server")
+            self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
+        elif psutil.pid_exists(int(self.pid)) != True:
             logging.info("pid diff & change")
-            self.I.update(col="pid", val = self.pid, **{"status":"FALSE"})
+            self.I.update(col = "pid", val = self.pid, **{"status":"FALSE"})
+            
         else:
-            logging.info("pid check")
+            logging.info("pid exist")
 
     def gameDB_check(self):
         # select gamename, pid, status,  from gaconnection where serverIp = IPadrr
         Data = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
         ppid = ''
+        logging.info('gameDB_check start')
         for line in reversed(Data):
             # 檢查DB status
             if 'TRUE' in line:
@@ -125,38 +131,44 @@ class sync_DB(threading.Thread):
             self.T = threading.Thread(target = self.pidthread())
         else:
             self.T = threading.Thread(target = self.gameDBthread())
-        self.T.setDaemon(True)
+        # self.T.setDaemon(True)
         self.T.start()
-    
+        self.T.join()   
     def stopthread(self):
         self.T.loop = False
 
 
 class Handler(BaseRequestHandler):
+    nowgame = ''
     def handle(self):
-        global nowgame, gampid
-        global SYN1, SYN2
+        global nowgame, gamepid
+        logging.debug(f"nowpid : {nowgame}")
         while True:
+            sync_DB(nowgame).pid_check()
             self.data = self.request.recv(1024).strip()
             logging.info(f"send length = {len(self.data)}")
-            logging.debug(f"send data = {self.data}")
+            logging.debug(f"server receive = {self.data}")
 
-            if len(self.data) > 100 or self.data == "done".encode():
-                raw = self.data
-                logging.debug(f"server receive file")
+            if self.data == bytes("sendfile".encode()) or self.data == bytes("done".encode()):
+                logging.debug("server receive file")
+                Zip = ZipFile("receive.zip" , 'w')
                 try:
                     with open ("receive.zip", "wb") as wb:
-                        while raw != "done".encode():
-                            logging.debug(f"server writing file....")
-                            wb.write(raw)
+                        while self.data != bytes("done".encode()):
+                            self.data = self.request.recv(1024)
+                            logging.info("server writing file....")
+                            if not self.data:
+                                break
+                            wb.write(self.data)
+                    self.request.sendall("TRUE".encode('utf-8'))
                     logging.info("file sending finish")
-                    
+
                 except:
                     logging.error("file error", exc_info=True)
+                    self.request.sendall("FAlSE".encode('utf-8'))
                 
-            elif len(self.data) > 0 and len(self.data) < 100:
+            elif len(self.data) > 0: # and len(self.data) < 100:
                 raw = self.data.decode('utf-8')
-                logging.debug(f"server receive =  {raw}")
                 self.brokercmd = json.loads(raw)
                 if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
                     gameID = self.brokercmd["gameId"]
@@ -166,24 +178,22 @@ class Handler(BaseRequestHandler):
                     logging.info(f"Now game number : {len(nowgame)}")
                     game = excute_game()
 
-                    if len(nowgame) == 0:
+                    if nowgame == '':
                         [IPadr, PID]= game.auto(config, exmode)
                         if PID != "":
-                            nowgame = (PID, )
-                            gamepid = {nowgame[0]: gamename}
-                            sync_DB(PID).childthread("p")
-                            sync_DB(PID).childthread("g")
+                            nowgame = PID
+                            gamepid = {nowgame: gamename}
+                            # sync_DB(nowgame).childthread("g")
                             logging.info(f"now game: {gamepid}")
 
-                    elif len(nowgame) == 1:
+                    elif len(gamepid) == 1:
                         if gamename in gamepid.values():
                             pass
                         else:
-                            os.system(f"taskkill /F /PID {nowgame[0]}")
+                            os.system(f"taskkill /F /PID {nowgame}")
                             [IPadr, PID]= game.auto(config, exmode)
-                            nowgame = (PID,)
-                            gamepid = {nowgame[0]: gamename}
-
+                            nowgame = PID
+                            gamepid = {nowgame : gamename}
                             logging.info(f"kill pid {gamepid}")
 
                     else:
@@ -203,14 +213,13 @@ class Handler(BaseRequestHandler):
                     retdata = {f"{IPadrr}": NEWme}
 
                 else:
-                    logging.warnings("server can't recognize args")
+                    logging.error("server can't recognize args")
 
                 self.request.sendall(json.dumps(retdata).encode('utf-8'))
             
             else:
-                logging.error("didn't receive by broker")
+                logging.warning("didn't receive by broker")
                 break
-
 
 if __name__ == "__main__":  # server_socket
     PORT = 8000

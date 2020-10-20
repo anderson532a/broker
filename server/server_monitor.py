@@ -19,7 +19,7 @@ TER = "taskkill /F /IM "
 
 hostname = socket.gethostname()
 IPadrr = socket.gethostbyname(hostname)
-nowgame = ()
+nowgame = ''
 gamepid = {} # {nowgame[]: gamename}
 IP = ""
 FORMAT = "%(asctime)s %(levelname)s:%(message)s"
@@ -139,7 +139,6 @@ class sync_DB(threading.Thread):
 
 
 class Handler(BaseRequestHandler):
-    nowgame = ''
     def handle(self):
         global nowgame, gamepid
         logging.debug(f"nowpid : {nowgame}")
@@ -175,7 +174,7 @@ class Handler(BaseRequestHandler):
                     exmode = self.brokercmd["excuteMode"]
                     config = self.brokercmd["configfile"]
                     gamename = config.split('.')[1]
-                    logging.info(f"Now game number : {len(nowgame)}")
+                    logging.info(f"Now game number : {nowgame}")
                     game = excute_game()
 
                     if nowgame == '':

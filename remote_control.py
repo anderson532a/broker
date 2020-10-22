@@ -1,8 +1,7 @@
 import winrm
 import socket
 import logging, json, time
-# import SQL_connect
-FORMAT = "%(asctime)s %(levelname)s:%(message)s"
+FORMAT = "%(asctime)s -%(levelname)s : %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
 _account = {"192.168.43.196":"RD"}
@@ -24,7 +23,7 @@ class remote:
       self.killpid = pid
       self.cmd = self.session.run_cmd(f"taskkill /F /PID {self.killpid}" )
       if exmode == "periodic":
-        self.session.run_cmd(f"taskkill /F /IM ga-server-periodic.exe" )
+        self.session.run_cmd(TER + "ga-server-periodic.exe")
       
       return self.cmd.status_code
 

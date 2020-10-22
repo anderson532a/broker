@@ -4,8 +4,7 @@ import subprocess, psutil
 import socket
 import time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
-import logging
-import json
+import logging, json
 import config_editor, SQL_connect
 
 # excute game command
@@ -19,11 +18,37 @@ TER = "taskkill /F /IM "
 
 hostname = socket.gethostname()
 IPadrr = socket.gethostbyname(hostname)
-nowgame = ''
-gamepid = {} # {nowgame[]: gamename}
 IP = ""
-FORMAT = "%(asctime)s %(levelname)s:%(message)s"
+FORMAT = "%(asctime)s -%(levelname)s : %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+
+class game_status:
+    def __init__(self):
+        self.nowgame = ''
+        self.gamepid = {} # {nowgame: gamename}
+        self.log()
+    
+    def log(self):
+        logging.info(f"now game: {self.gamepid}")
+
+    def initial(self):
+        self.nowgame = ''
+        self.gamepid = {}
+        self.log()
+
+    def update_status(self, pid, name):
+        self.nowgame = pid
+        self.gamepid[pid] = name
+        self.log()
+
+    def get_nowgame(self):
+        return self.nowgame
+    
+    def get_len(self):
+        return len(self.gamepid)
+
+    def get_dict(self):
+        return self.gamepid
 
 
 class excute_game:
@@ -76,6 +101,15 @@ class excute_game:
         PID = self.get_PID()
         return [IPadr, PID]
 
+    @classmethod
+    def kill_game(cls, pid):
+        os.system(f"taskkill /F /PID {pid}")
+        cmd = "TASKLIST", "/FI", "imagename eq ga-server-periodic.exe"
+        GA = subprocess.check_output(cmd).decode('big5').split()
+        if "ga-server-periodic.exe" in GA:
+            os.system(TER + "ga-server-periodic.exe")
+        logging.info(f"kill pid {pid}")
+
 
 class sync_DB(threading.Thread):
     def __init__(self, PID):
@@ -85,7 +119,7 @@ class sync_DB(threading.Thread):
 
     # 同步DB server 之 PID 狀態
     def pid_check(self):
-        logging.info('pid_check start')
+        logging.info('-- pid_check start --')
         if self.pid == '':
             logging.info("NO game pid in server")
             self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
@@ -95,25 +129,35 @@ class sync_DB(threading.Thread):
             
         else:
             logging.info("pid exist")
+            time.sleep(5)
 
     def gameDB_check(self):
-        # select gamename, pid, status,  from gaconnection where serverIp = IPadrr
+        # select gamename, pid, status from gaconnection where serverIp = IPadrr
         Data = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
         ppid = ''
-        logging.info('gameDB_check start')
-        for line in reversed(Data):
-            # 檢查DB status
-            if 'TRUE' in line:
-                if line[1] == self.pid:
-                    logging.info('server & DB pid sync')
-                else:
-                    logging.info('server & DB double TRUE')
-                    # update gaconnection set status='FALSE' where PID=self.pid
-                    self.I.update(col="pid", val = line[1], **{"status":"FALSE"})
-            # 重複PID
-            if line[1] == ppid:
-                logging.info('DB has double pid')
-
+        logging.info('-- gameDB_check start --')
+        TF = list(zip(*Data))
+        # 由DB 關遊戲
+        logging.debug(f"{TF[2]}")
+        if 'TRUE' not in TF[2]:
+            if self.pid != '':
+                excute_game.kill_game(self.pid)
+                return "k"
+            
+        else:
+            for line in reversed(Data):
+                # 檢查DB status
+                if 'TRUE' in line:
+                    if line[1] == self.pid:
+                        logging.info('server & DB pid sync')
+                    else:
+                        logging.info('server & DB double TRUE')
+                        # update gaconnection set status='FALSE' where PID=self.pid
+                        self.I.update(col="pid", val = line[1], **{"status":"FALSE"})
+                # 重複PID
+                if line[1] == ppid:
+                    logging.info('DB has double pid')
+    '''     
     def gameDBthread(self):
         t = threading.currentThread()
         while getattr(t, "loop", True):
@@ -136,14 +180,18 @@ class sync_DB(threading.Thread):
         self.T.join()   
     def stopthread(self):
         self.T.loop = False
-
+    '''
 
 class Handler(BaseRequestHandler):
+    GS = game_status()
     def handle(self):
-        global nowgame, gamepid
-        logging.debug(f"nowpid : {nowgame}")
         while True:
-            sync_DB(nowgame).pid_check()
+            now = GS.get_nowgame()
+            logging.info(f"nowpid : {now}")
+            sync_DB(now).pid_check()
+            # PAR = sync_DB(now).gameDB_check()
+            #if PAR == "k":
+            #    GS.initial()
             self.data = self.request.recv(1024).strip()
             logging.info(f"send length = {len(self.data)}")
             logging.debug(f"server receive = {self.data}")
@@ -166,7 +214,7 @@ class Handler(BaseRequestHandler):
                     logging.error("file error", exc_info=True)
                     self.request.sendall("FAlSE".encode('utf-8'))
                 
-            elif len(self.data) > 0: # and len(self.data) < 100:
+            elif len(self.data) > 0:
                 raw = self.data.decode('utf-8')
                 self.brokercmd = json.loads(raw)
                 if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
@@ -174,26 +222,24 @@ class Handler(BaseRequestHandler):
                     exmode = self.brokercmd["excuteMode"]
                     config = self.brokercmd["configfile"]
                     gamename = config.split('.')[1]
-                    logging.info(f"Now game number : {nowgame}")
+                    GS.log()
                     game = excute_game()
 
-                    if nowgame == '':
+                    if now == '':
+                        logging.info("first start")
                         [IPadr, PID]= game.auto(config, exmode)
                         if PID != "":
-                            nowgame = PID
-                            gamepid = {nowgame: gamename}
-                            # sync_DB(nowgame).childthread("g")
-                            logging.info(f"now game: {gamepid}")
+                            GS.update_status(PID, gamename)
 
-                    elif len(gamepid) == 1:
-                        if gamename in gamepid.values():
-                            pass
+                    elif GS.get_len() == 1:
+                        if gamename in GS.get_dict.values():
+                            logging.info("same game")
                         else:
-                            os.system(f"taskkill /F /PID {nowgame}")
+                            logging.info("another game")
+                            excute_game.kill_game(now)
                             [IPadr, PID]= game.auto(config, exmode)
-                            nowgame = PID
-                            gamepid = {nowgame : gamename}
-                            logging.info(f"kill pid {gamepid}")
+                            if PID != "":
+                                GS.update_status(PID, gamename)
 
                     else:
                         logging.error("to many process")

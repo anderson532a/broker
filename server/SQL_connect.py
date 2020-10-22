@@ -9,7 +9,7 @@ gamedb = MySQLdb.connect(host="localhost",
 gamedb.ping(True)
 cur = gamedb.cursor()
 default = ("gaconnection", "config_data", "gameslist")
-FORMAT = "%(asctime)s %(levelname)s:%(message)s"
+FORMAT = "%(asctime)s -%(levelname)s : %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
 class SQL_CMD:
@@ -45,8 +45,8 @@ class readSQL(SQL_CMD):
                 logging.debug(f"CMD : {self.CMD}")
             super().execute()
             read = cur.fetchall()
-            for i in read:
-                logging.debug(f"{i}")  # tuple with tuple
+            # for i in read:
+                # logging.debug(f"{i}")  # tuple with tuple
             return read
         except:
             super().close()
@@ -101,7 +101,7 @@ class writeSQL(SQL_CMD):
                     CCMD = CCMD + ST
             self.set = CCMD
             self.CMD = f"update {self.Table} set {self.set} where {self.col}=\"{self.val}\""
-            logging.info(f"CMD : {self.CMD}")
+            logging.debug(f"CMD : {self.CMD}")
             super().execute()
             gamedb.commit()
             logging.info("update commit sucessful")
@@ -114,33 +114,21 @@ class writeSQL(SQL_CMD):
     def delete(self):
         pass
 
-'''
+
 if __name__ == "__main__":
     A = readSQL()
     B = writeSQL()
     results = A.select("gamename", "pid", "status", **{"serverIp":"192.168.43.196"})
-    print(type(results))
+    print(type(results), len(results))
     ppid = ''
-    for line in reversed(results):
-        # 確認SERVER status同步
-        if '12528' in line:
-            if line[2] == 'TRUE':
-                print("T")
-            else:
-                print("F")
-        # 檢查DB status
-        if 'TRUE' in line:
-            if line[1] == '12528':
-                print("TT")
-            else:
-                print("FF")
-        # 重複PID
-        if line[1] == ppid and ppid != '':
-            print("DD")
-            print(line)
+    T = list(zip(*results))
+    print(T[2])
+    if 'TRUE' not in T[2]:
+        print("FFF")
+
+
+        
                 
-        ppid = line[1]
-'''
 
         
         

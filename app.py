@@ -1,10 +1,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import logging
+import logging, os
 import remote_control
 
-app = Flask(__name__)
+UPLOAD_FOLDER = os.getcwd()
 ALLOWED_EXTENSIONS = set(['zip'])
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
 server_ip = ("192.168.43.196", )
 server_status = {server_ip[0]: ""}
@@ -78,6 +81,7 @@ def addgame():
         return "no file, please try again"
     else:
         Zip = request.files['file']
+        Zip.save((os.path.join(app.config['UPLOAD_FOLDER'], Zip.filename)))
         logging.info(f"API get zip : {Zip.filename}")
         CONFIG['file'] = f"{gname}.zip"
         result = {}

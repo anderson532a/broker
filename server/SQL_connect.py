@@ -61,8 +61,7 @@ class writeSQL(SQL_CMD):
     def insert(self, num=0, **newitem):
         self.Table = self.table[num]
         self.new = newitem
-        self.CMD1 = f"insert into {self.Table} ({self.columns})"
-        self.CMD2 = f"values ({self.values})"
+        
         try:
             self.items = self.new.items()
             self.values = ""
@@ -76,6 +75,8 @@ class writeSQL(SQL_CMD):
                 V = f", {val}"
                 self.values = self.values + V
                 self.columns = self.columns + K
+            self.CMD1 = f"insert into {self.Table} ({self.columns})"
+            self.CMD2 = f"values ({self.values})"
             self.CMD = self.CMD1  + self.CMD2
             super().execute()
             gamedb.commit()

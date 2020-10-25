@@ -11,7 +11,7 @@ import config_editor, SQL_connect
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\"
 gamepath = "C:\\gamefile\\"
-
+oripath = os.getcwd()
 S_EVD = "start ga-server-event-driven config//"
 S_PD = "start /min ga-server-periodic config//"
 TER = "taskkill /F /IM "
@@ -78,7 +78,7 @@ class excute_game:
             self.status = os.system(_CMD)
             # except FileNotFoundError:    #not find file
         if self.status == 0:
-            logging.info(f" {Name} game excuted")
+            logging.info(f"{Name} game excuted")
         else:
             logging.info("game failed")
 
@@ -106,8 +106,8 @@ class excute_game:
         os.system(f"taskkill /F /PID {pid}")
         cmd = "TASKLIST", "/FI", "imagename eq ga-server-periodic.exe"
         GA = subprocess.check_output(cmd).decode('big5').split()
-        if "ga-server-periodic.exe" in GA:
-            os.system(TER + "ga-server-periodic.exe")
+        # if "ga-server-periodic.exe" in GA:
+        #     os.system(TER + "ga-server-periodic.exe")
         logging.info(f"kill pid {pid}")
 
 
@@ -183,7 +183,6 @@ class sync_DB(threading.Thread):
     '''
 
 class Handler(BaseRequestHandler):
-    GS = game_status()
     def handle(self):
         while True:
             now = GS.get_nowgame()
@@ -226,23 +225,25 @@ class Handler(BaseRequestHandler):
                     game = excute_game()
 
                     if now == '':
-                        logging.info("first start")
+                        logging.info("--- first game start ---")
                         [IPadr, PID]= game.auto(config, exmode)
                         if PID != "":
                             GS.update_status(PID, gamename)
 
                     elif GS.get_len() == 1:
-                        if gamename in GS.get_dict.values():
-                            logging.info("same game")
+                        if gamename in GS.get_dict().values():
+                            logging.info("--- same game ---")
+                            IPadr = IPadrr
+                            PID = GS.get_nowgame()
                         else:
-                            logging.info("another game")
+                            logging.info("--- another game ---")
                             excute_game.kill_game(now)
                             [IPadr, PID]= game.auto(config, exmode)
                             if PID != "":
                                 GS.update_status(PID, gamename)
 
                     else:
-                        logging.error("to many process")
+                        logging.error("--- to many process ---")
 
                     if IPadr == "" and PID == "":
                         retdata = {"gamestatus": "FALSE",
@@ -254,8 +255,9 @@ class Handler(BaseRequestHandler):
                 elif "gamename" and "file" in self.brokercmd:
                     gname = self.brokercmd["gamename"]
                     self.filename = self.brokercmd["file"]
+                    os.chdir(oripath)
                     NEWmes = config_editor.create_new(name = gname).create()
-                    retdata = {f"{IPadrr}": NEWme}
+                    retdata = {f"{IPadrr}": NEWmes}
 
                 else:
                     logging.error("server can't recognize args")
@@ -269,6 +271,7 @@ class Handler(BaseRequestHandler):
 if __name__ == "__main__":  # server_socket
     PORT = 8000
     ADDR = (IPadrr, PORT)
+    GS = game_status()
     server = ThreadingTCPServer(ADDR, Handler)
     logging.info("server_socket start")
     server.serve_forever()

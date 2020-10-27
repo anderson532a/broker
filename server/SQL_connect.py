@@ -19,6 +19,7 @@ class SQL_CMD:
 
     def execute(self):
         cur.execute(self.CMD)
+        gamedb.commit()
         
     def close(self):
         cur.close()
@@ -79,7 +80,6 @@ class writeSQL(SQL_CMD):
             self.CMD2 = f"values ({self.values})"
             self.CMD = self.CMD1  + self.CMD2
             super().execute()
-            gamedb.commit()
         except:
             logging.error("something wrong", exc_info=True)
             # cur.execute("SET SQL_SAFE_UPDATES=0")
@@ -104,10 +104,9 @@ class writeSQL(SQL_CMD):
             self.CMD = f"update {self.Table} set {self.set} where {self.col}=\"{self.val}\""
             logging.debug(f"CMD : {self.CMD}")
             super().execute()
-            gamedb.commit()
             logging.info("update commit sucessful")
         except:
-            logging.error("something wrong", exc_info=True)
+            logging.error("something wrong update", exc_info=True)
             #cur.execute("SET SQL_SAFE_UPDATES=0")
             super().close()
             
@@ -115,19 +114,26 @@ class writeSQL(SQL_CMD):
     def delete(self):
         pass
 
-
+'''
 if __name__ == "__main__":
     A = readSQL()
     B = writeSQL()
-    results = A.select("gamename", "pid", "status", **{"serverIp":"192.168.43.196"})
+    results = A.select(*("gamename", "pid", "status"), **{"serverIp":"192.168.43.196"})
     print(type(results), len(results))
-    ppid = ''
     T = list(zip(*results))
-    print(T[2])
-    if 'TRUE' not in T[2]:
-        print("FFF")
-
-
+    print(T)
+    #if 'TRUE' not in T[2]:
+    #    print("FFF")
+    for line in reversed(results):
+        print(line)
+        # 檢查DB status
+        
+        if 'TRUE' in line:
+            if line[1] == '19372':
+                print('server & DB pid sync')
+            else:
+                print('server & DB double TRUE')
+'''
         
                 
 

@@ -72,19 +72,15 @@ class create_new:
         newpath = configpath + confname
         try:
             with open(newpath, 'x') as fx:
-                logging.debug("write mode x, create new"+ f"{self.name}")
+                logging.debug("write mode x, create name :"+ f"{self.name}")
                 fx.write(template.read_text())
                 fx.seek(0,0)
                 fx.write(f"# configuration for {self.name}" + "\n")
-                logging.info("new create sucess")
+                logging.info("new create success")
                 return "TRUE"
         except FileExistsError:
             logging.error("file already exist", exc_info=True)
             return "FALSE"
-'''
-class unpackzip:
-    def __init__(self):
-'''
 
 
 '''

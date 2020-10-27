@@ -1,6 +1,6 @@
-import os, threading, sys
-from zipfile import ZipFile
+import os, sys
 import subprocess, psutil
+from zipfile import ZipFile
 import socket
 import time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
@@ -38,6 +38,7 @@ class game_status:
 
     def update_status(self, pid, name):
         self.nowgame = pid
+        self.gamepid = {}
         self.gamepid[pid] = name
         self.log()
 
@@ -64,7 +65,7 @@ class excute_game:
             _CMD = S_EVD + self.config
             os.chdir(exepath)
             self.status = os.system(_CMD)  # start gaminganywhere
-            time.sleep(1)
+            time.sleep(3)
             get = subprocess.getoutput(
                 f"WMIC PROCESS WHERE Name=\"{Name}.exe\" get Processid")
             self.pid = get.split()[-1]
@@ -106,12 +107,12 @@ class excute_game:
         os.system(f"taskkill /F /PID {pid}")
         cmd = "TASKLIST", "/FI", "imagename eq ga-server-periodic.exe"
         GA = subprocess.check_output(cmd).decode('big5').split()
-        # if "ga-server-periodic.exe" in GA:
-        #     os.system(TER + "ga-server-periodic.exe")
+        if "ga-server-periodic.exe" in GA:
+            os.system(TER + "ga-server-periodic.exe")
         logging.info(f"kill pid {pid}")
 
 
-class sync_DB(threading.Thread):
+class sync_DB:
     def __init__(self, PID):
         self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
@@ -122,14 +123,17 @@ class sync_DB(threading.Thread):
         logging.info('-- pid_check start --')
         if self.pid == '':
             logging.info("NO game pid in server")
-            self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
+            DB = self.S.select(*("pid", "status"), **{"serverIp":IPadrr})
+            # logging.debug(f"{DB}")
+            TF = list(zip(*DB))
+            if 'TRUE' in TF[1]:
+                self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
         elif psutil.pid_exists(int(self.pid)) != True:
             logging.info("pid diff & change")
             self.I.update(col = "pid", val = self.pid, **{"status":"FALSE"})
             
         else:
             logging.info("pid exist")
-            time.sleep(5)
 
     def gameDB_check(self):
         # select gamename, pid, status from gaconnection where serverIp = IPadrr
@@ -138,80 +142,70 @@ class sync_DB(threading.Thread):
         logging.info('-- gameDB_check start --')
         TF = list(zip(*Data))
         # 由DB 關遊戲
-        logging.debug(f"{TF[2]}")
+        
         if 'TRUE' not in TF[2]:
             if self.pid != '':
                 excute_game.kill_game(self.pid)
                 return "k"
-            
         else:
             for line in reversed(Data):
                 # 檢查DB status
                 if 'TRUE' in line:
-                    if line[1] == self.pid:
+                    if line[1] == str(self.pid):
                         logging.info('server & DB pid sync')
                     else:
-                        logging.info('server & DB double TRUE')
+                        logging.info('server & DB diff TRUE')
                         # update gaconnection set status='FALSE' where PID=self.pid
                         self.I.update(col="pid", val = line[1], **{"status":"FALSE"})
+                '''
                 # 重複PID
                 if line[1] == ppid:
                     logging.info('DB has double pid')
-    '''     
-    def gameDBthread(self):
-        t = threading.currentThread()
-        while getattr(t, "loop", True):
-            self.gameDB_check()
-            time.sleep(20)
+         '''
 
-    def pidthread(self):
-        t = threading.currentThread()
-        while getattr(t, "loop", True):
-            self.pid_check()
-            time.sleep(5)
-
-    def childthread(self, W):
-        if W == "p":
-            self.T = threading.Thread(target = self.pidthread())
-        else:
-            self.T = threading.Thread(target = self.gameDBthread())
-        # self.T.setDaemon(True)
-        self.T.start()
-        self.T.join()   
-    def stopthread(self):
-        self.T.loop = False
-    '''
 
 class Handler(BaseRequestHandler):
     def handle(self):
+        i = 0
         while True:
             now = GS.get_nowgame()
             logging.info(f"nowpid : {now}")
             sync_DB(now).pid_check()
-            # PAR = sync_DB(now).gameDB_check()
-            #if PAR == "k":
-            #    GS.initial()
+            if i > 0:
+                time.sleep(2)
+            PAR = sync_DB(now).gameDB_check()
+            if PAR == "k":
+                GS.initial()
+                now = GS.get_nowgame()
             self.data = self.request.recv(1024).strip()
             logging.info(f"send length = {len(self.data)}")
             logging.debug(f"server receive = {self.data}")
+            i += 1
 
             if self.data == bytes("sendfile".encode()) or self.data == bytes("done".encode()):
-                logging.debug("server receive file")
-                Zip = ZipFile("receive.zip" , 'w')
+                filename = self.request.recv(1024).strip().decode('utf-8')
+                logging.debug(f"server receive file : {filename}")
                 try:
-                    with open ("receive.zip", "wb") as wb:
+                    with open (filename, "wb") as wb:
                         while self.data != bytes("done".encode()):
-                            self.data = self.request.recv(1024)
+                            self.data = self.request.recv(4096)
+                            # logging.debug(f"data : {self.data}")
                             logging.info("server writing file....")
                             if not self.data:
                                 break
                             wb.write(self.data)
+
                     self.request.sendall("TRUE".encode('utf-8'))
                     logging.info("file sending finish")
+                    File = filename.strip('.zip')
+                    with ZipFile(filename, 'r') as zp:
+                        zp.extractall(os.path.join(gamepath, f"{File}"))
+                        logging.info("unzip success")
+                    os.remove(filename)
 
                 except:
                     logging.error("file error", exc_info=True)
-                    self.request.sendall("FAlSE".encode('utf-8'))
+                    self.request.sendall("FALSE".encode('utf-8'))
                 
             elif len(self.data) > 0:
                 raw = self.data.decode('utf-8')
@@ -243,7 +237,7 @@ class Handler(BaseRequestHandler):
                                 GS.update_status(PID, gamename)
 
                     else:
-                        logging.error("--- to many process ---")
+                        logging.error("--- out of range ---")
 
                     if IPadr == "" and PID == "":
                         retdata = {"gamestatus": "FALSE",
@@ -272,6 +266,7 @@ if __name__ == "__main__":  # server_socket
     PORT = 8000
     ADDR = (IPadrr, PORT)
     GS = game_status()
+    sync_DB(GS.get_nowgame()).pid_check()
     server = ThreadingTCPServer(ADDR, Handler)
     logging.info("server_socket start")
     server.serve_forever()

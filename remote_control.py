@@ -49,18 +49,25 @@ class client_socket:
   def sendfile(self, filename):
     self.client.send("sendfile".encode('utf-8'))
     time.sleep(1)
+    self.client.send(f"{filename}".encode('utf-8'))
+    time.sleep(1)
     try:
       with open (filename, 'rb')as rb:
         logging.info("file opened")
-        data = rb.read(1024)
-        self.client.sendall(data)
-        logging.info("client sending file ....")
+        while True:
+          data = rb.readline(4096)
+          if not data:
+            break
+          self.client.send(data)
+          #logging.debug(f"data : {data}")
+          logging.info("client sending file ....")
+          
       self.client.send("done".encode('utf-8'))
         # self.client.shutdown(socket.SHUT_WR)
       logging.info("send file done")
 
       msg = self.client.recv(1024).decode('utf-8')
-      logging.info(f"client receive = {msg}")
+      logging.info(f"client receive : {msg}")
       return msg
 
     except:
@@ -68,7 +75,7 @@ class client_socket:
 
 
 
-'''
+
 if __name__ == "__main__":
 
   A = client_socket("AndersonCJ_Chen")
@@ -76,5 +83,5 @@ if __name__ == "__main__":
   #api = {"gameId":123, "excutemode":"periodic"}
   #B = A.control(**api)
     
-  C = A.sendfile("ABC.zip")
-'''
+  C = A.sendfile("Screen Shot 2020-10-24 at 11.01.26 AM.zip")
+

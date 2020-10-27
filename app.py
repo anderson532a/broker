@@ -61,12 +61,12 @@ def startGame():
 def endGame():
     global server_status
     exmode = request.args.get("excuteMode", type=str)
-    serverip = request.args.get("serverip", type=str)
+    ip = request.args.get("serverIp", type=str)
     pid = request.args.get("pid", type=str)
-    remote_status = remote_control.remote(serverip).taskkill(exmode, pid)
+    remote_status = remote_control.remote(ip).taskkill(exmode, pid)
 
     if remote_status == 0:
-        server_status[serverip] = ""
+        server_status[ip] = ""
         return jsonify(gamestatus="end game sucessful")
     else:
         return jsonify(gamestatus="failed")
@@ -74,37 +74,40 @@ def endGame():
 
 @app.route('/Add', methods=['POST'])
 def addgame():
-    gname = request.form.get('gamename', type=str)
+    gname = request.args.get('gamename', type=str)
     CONFIG = dict(request.form)
-    if 'file' not in request.files:
-        logging.error("request with no file")
-        return "no file, please try again"
-    else:
-        Zip = request.files['file']
-        Zip.save((os.path.join(app.config['UPLOAD_FOLDER'], Zip.filename)))
-        logging.info(f"API get zip : {Zip.filename}")
-        CONFIG['file'] = f"{gname}.zip"
-        result = {}
-        for i in server_ip:
-            upload = remote_control.client_socket(i)
-            result.update(upload.control(**CONFIG))
-            upload.sendfile(Zip.filename)
+    CONFIG['gamename'] = gname
+   # if 'file' not in request.files:
+        #logging.error("request with no file")
+       # return "no file, please try again"
+    #else:
+    Zip = request.files['zip']
+    Zip.save((os.path.join(app.config['UPLOAD_FOLDER'], Zip.filename)))
+    logging.info(f"API get zip : {Zip.filename}")
+    File = f"{gname}.zip"
+    CONFIG['file'] = File
+    result = {}
+    for i in server_ip:
+        upload = remote_control.client_socket(i)
+        result.update(upload.control(**CONFIG))
+        upload.sendfile(File)
 
-        if "false" in result.items():
-            return {"status": "FALSE try edit"}
-        else:
-            return {"status": "TRUE"}
+    if "false" in result.items():
+        return {"status": "FALSE try edit"}
+    else:
+        return {"status": "TRUE"}
     
     
 
 @app.route('/Conf', methods=['POST'])
 def config():
     gname = request.form.get('gamename', type=str)
-    EDIT = dict(request.form)
-    logging.debug(f"{EDIT}")
-    del EDIT['gamename']
-    para = dict(request.args) # if with other parameter
+    EDIT = request.form['config']
+    logging.debug(f"{EDIT, type(EDIT)}")
+    logging.debug(f"{EDIT[0], type(EDIT[0])}")
+
     COMME = {}
+    '''
     if 'include' in str(EDIT):
         EDIT2 = EDIT.copy()
         for k, v in EDIT2.items():
@@ -121,7 +124,7 @@ def config():
         if COMME != {}:
             logging.debug("comment : " + f"{COMME}")
             result3 = config.control(**COMME)
-
+'''
     return "get config form"
 
 

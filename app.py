@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import logging, os
+import logging, os, json
 import remote_control
 
 UPLOAD_FOLDER = os.getcwd()
@@ -102,29 +102,33 @@ def addgame():
 @app.route('/Conf', methods=['POST'])
 def config():
     gname = request.form.get('gamename', type=str)
+    # EDIT = dict(request.form)['config']
     EDIT = request.form['config']
-    logging.debug(f"{EDIT, type(EDIT)}")
-    logging.debug(f"{EDIT[0], type(EDIT[0])}")
+    key = ""
+    NEWEDIT = EDIT.replace("\'", "\"")
+    for i in range(len(EDIT)):
+        if EDIT[i] == ":":
+            for j in range(i-1, 0, -1):
+                if EDIT[j] == " ":
+                    break 
+                key = key + EDIT[j]
+            key = key[::-1]
+            if f"\"{key}\"" not in NEWEDIT:
+                NEWEDIT = NEWEDIT.replace(f"{key}", f"\"{key}\"")
+            key = ""
+    logging.debug(NEWEDIT)  
+    EDIT = json.loads(NEWEDIT)
+    if len(EDIT) < 1:
+        logging.warning("no data in config body")
+    else:
+        for MODI in EDIT:
+            logging.debug(f"modi : {MODI}")
+            MODI["gamename"] = gname
+            for i in server_ip:
+                config = remote_control.client_socket(i)
+                result = config.control(**MODI)
+                
 
-    COMME = {}
-    '''
-    if 'include' in str(EDIT):
-        EDIT2 = EDIT.copy()
-        for k, v in EDIT2.items():
-            if 'include' in str(k):
-                COMME[k] = v
-                EDIT.pop(k)
-   
-    for i in server_ip:
-        config = remote_control.client_socket(i)
-        result1 = config.control(**{"gamename": gname})
-        if EDIT != {}:
-            logging.debug("edit : " + f"{EDIT}")
-            result2 = config.control(**EDIT)
-        if COMME != {}:
-            logging.debug("comment : " + f"{COMME}")
-            result3 = config.control(**COMME)
-'''
     return "get config form"
 
 

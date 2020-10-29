@@ -250,8 +250,14 @@ class Handler(BaseRequestHandler):
                     gname = self.brokercmd["gamename"]
                     self.filename = self.brokercmd["file"]
                     os.chdir(oripath)
-                    NEWmes = config_editor.create_new(name = gname).create()
-                    retdata = {f"{IPadrr}": NEWmes}
+                    NEWconf = config_editor.create_new(name = gname).create()
+                    retdata = {f"{IPadrr}": NEWconf}
+
+                elif "gamename" and "GAcolumn" in self.brokercmd:
+                    gname = self.brokercmd["gamename"]
+                    del self.brokercmd["gamename"]
+                    MODIconf = config_editor.edit_config(gname).match_modify(**self.brokercmd)
+                    retdata = {f"{IPadrr}": MODIconf}
 
                 else:
                     logging.error("server can't recognize args")

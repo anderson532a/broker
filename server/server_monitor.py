@@ -211,7 +211,7 @@ class Handler(BaseRequestHandler):
                 raw = self.data.decode('utf-8')
                 self.brokercmd = json.loads(raw)
                 if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
-                    gameID = self.brokercmd["gameId"]
+                    # gameID = self.brokercmd["gameId"]
                     exmode = self.brokercmd["excuteMode"]
                     config = self.brokercmd["configfile"]
                     gamename = config.split('.')[1]
@@ -253,10 +253,17 @@ class Handler(BaseRequestHandler):
                     NEWconf = config_editor.create_new(name = gname).create()
                     retdata = {f"{IPadrr}": NEWconf}
 
-                elif "gamename" and "GAcolumn" in self.brokercmd:
+                elif "gamename" and "gaColumn" in self.brokercmd:
                     gname = self.brokercmd["gamename"]
-                    del self.brokercmd["gamename"]
-                    MODIconf = config_editor.edit_config(gname).match_modify(**self.brokercmd)
+                    data = {}
+                    data['dictionary'] = self.brokercmd['dictionary']
+                    data['gaColumn'] = self.brokercmd['gaColumn']
+                    if self.brokercmd.get('value'):
+                        data['value'] = self.brokercmd['value']
+                    elif self.brokercmd.get('newValue'):
+                        data['newValue'] = self.brokercmd['newValue']
+
+                    MODIconf = config_editor.edit_config(gname).match_modify(**data)
                     retdata = {f"{IPadrr}": MODIconf}
 
                 else:

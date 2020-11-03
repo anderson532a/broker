@@ -29,7 +29,7 @@ class edit_config(read_in):
         super().__init__(name)
 
     def match_modify(self, **change):
-        k = change["GAcolumn"]
+        k = change["gaColumn"]
         if "newValue" in change:
             v = str(change["newValue"])
         else:

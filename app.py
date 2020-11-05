@@ -1,17 +1,18 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import logging, os, json
+import os, json
 import remote_control
 
 UPLOAD_FOLDER = os.getcwd()
 ALLOWED_EXTENSIONS = set(['zip'])
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
 server_ip = ("192.168.43.196", )
 server_status = {server_ip[0]: ""}
-
+log = app.logger
 
 @app.route("/")
 def home():
@@ -22,7 +23,7 @@ def home():
 def test():
     if request.method == 'GET':
         A = dict(request.args)
-        logging.debug(f"{A}, {type(A)}")
+        log.debug(f"{A}, {type(A)}")
         gameID = request.args.get("gameId", type=str)
         exmode = request.args.get("excuteMode", type=str)
         selectconfig = request.args.get("configfile", type=str)
@@ -53,7 +54,7 @@ def startGame():
         return jsonify(result)
         '''
         else:
-            logging.warning("server is full !!!")
+            log.warning("server is full !!!")
             return jsonify({"gamestatus": "FULL", "gameIP": "", "PID": ""})
 '''
 
@@ -78,19 +79,20 @@ def addgame():
     CONFIG = dict(request.form)
     CONFIG['gamename'] = gname
    # if 'file' not in request.files:
-        #logging.error("request with no file")
+        #log.error("request with no file")
        # return "no file, please try again"
     #else:
     Zip = request.files['zip']
     Zip.save((os.path.join(app.config['UPLOAD_FOLDER'], Zip.filename)))
-    logging.info(f"API get zip : {Zip.filename}")
+    log.info(f"API get zip : {Zip.filename}")
     File = f"{gname}.zip"
     CONFIG['file'] = File
     result = {}
     for i in server_ip:
         upload = remote_control.client_socket(i)
         result.update(upload.control(**CONFIG))
-        upload.sendfile(File)
+        upload.sendfile(Zip.filename, File)
+        os.remove(Zip.filename)
 
     if "false" in result.items():
         return {"status": "FALSE try edit"}
@@ -103,30 +105,32 @@ def addgame():
 def config():
     gname = request.form.get('gamename', type=str)
     # EDIT = dict(request.form)['config']
-    EDIT = request.form['config']
-    key = ""
-    NEWEDIT = EDIT.replace("\'", "\"")
-    for i in range(len(EDIT)):
-        if EDIT[i] == ":":
-            for j in range(i-1, 0, -1):
-                if EDIT[j] == " ":
-                    break 
-                key = key + EDIT[j]
-            key = key[::-1]
-            if f"\"{key}\"" not in NEWEDIT:
-                NEWEDIT = NEWEDIT.replace(f"{key}", f"\"{key}\"")
-            key = ""
-    logging.debug(NEWEDIT)  
-    EDIT = json.loads(NEWEDIT)
-    if len(EDIT) < 1:
-        logging.warning("no data in config body")
-    else:
-        for MODI in EDIT:
-            logging.debug(f"modi : {MODI}")
-            MODI["gamename"] = gname
-            for i in server_ip:
-                config = remote_control.client_socket(i)
-                result = config.control(**MODI)
+    log.debug(request.form)
+    if 'config' in request.form:
+        EDIT = request.form['config']
+        key = ""
+        NEWEDIT = EDIT.replace("\'", "\"")
+        for i in range(len(EDIT)):
+            if EDIT[i] == ":":
+                for j in range(i-1, 0, -1):
+                    if EDIT[j] == " ":
+                        break 
+                    key = key + EDIT[j]
+                key = key[::-1]
+                if f"\"{key}\"" not in NEWEDIT:
+                    NEWEDIT = NEWEDIT.replace(f"{key}", f"\"{key}\"")
+                key = ""
+        log.debug(NEWEDIT)  
+        EDIT = json.loads(NEWEDIT)
+        if len(EDIT) < 1:
+            log.warning("no data in config body")
+        else:
+            for MODI in EDIT:
+                log.debug(f"modi : {MODI}")
+                MODI["gamename"] = gname
+                for i in server_ip:
+                    config = remote_control.client_socket(i)
+                    result = config.control(**MODI)
                 
 
     return "get config form"
@@ -134,4 +138,5 @@ def config():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
+    
 

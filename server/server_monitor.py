@@ -183,6 +183,7 @@ class Handler(BaseRequestHandler):
             i += 1
 
             if self.data == bytes("sendfile".encode()) or self.data == bytes("done".encode()):
+                self.request.send("ready".encode('utf-8'))
                 filename = self.request.recv(1024).strip().decode('utf-8')
                 logging.debug(f"server receive file : {filename}")
                 try:
@@ -198,6 +199,7 @@ class Handler(BaseRequestHandler):
                     self.request.sendall("TRUE".encode('utf-8'))
                     logging.info("file sending finish")
                     File = filename.strip('.zip')
+                    logging.debug(f"rec file name : {File}")
                     with ZipFile(filename, 'r') as zp:
                         zp.extractall(os.path.join(gamepath, f"{File}"))
                         logging.info("unzip success")

@@ -17,7 +17,7 @@ class read_in:
             with open(self.name,'r') as fr:
                 self.list = fr.readlines()
                 logging.info("read in success")
-                # logging.debug(self.list)
+                logging.debug(self.list)
 
         except FileNotFoundError:
             logging.error("can't find", exc_info=True)
@@ -29,6 +29,7 @@ class edit_config(read_in):
         super().__init__(name)
 
     def match_modify(self, **change):
+        d = change['dictionary']
         k = change["gaColumn"]
         if "newValue" in change:
             v = str(change["newValue"])
@@ -61,6 +62,11 @@ class edit_config(read_in):
 
         if A == True:
             logging.info("- config append -")
+            B = False
+            dstr = d + "\n"
+            if dstr in self.list:
+                logging.info(f"find {d} in {self.list.index(dstr)}")
+                
             other = " = ".join([k, v])
             newlist.append(other)
         
@@ -104,12 +110,12 @@ class create_new:
             return "FALSE"
 
 
-'''
+
 if __name__ == "__main__": # for testing
-    A = {"GAcolumn": "include = common/server-common.conf", "value": 'True'}
-    B = {"GAcolumn": "enable-audio", "value": 'false'}
-    C = {"GAcolumn": "video-fps", "value": 50}
-    test = edit_config("test")
+    A = {'dictionary':"[core]", "gaColumn": "include = common/server-common.conf", "value": 'True'}
+    B = {'dictionary':"[ga-server-periodic]", "gaColumn": "enable-audio", "value": 'false'}
+    C = {'dictionary':"[video]", "gaColumn": "video-fps", "value": 50}
+    test = edit_config("tttttt")
     test.match_modify(**C)
-'''
+
 

@@ -75,14 +75,51 @@ class client_socket:
         logging.error("file error", exc_info=True)
 
 
+_connection = None
 
-'''
+    def __init__(self, host, port, username, password):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+        self.create_connection(self.host, self.port,
+                               self.username, self.password)
+
+    @classmethod
+    def create_connection(cls, host, port, username, password):
+      
+        transport = Transport(sock=(host, port))
+        transport.connect(username=username, password=password)
+        cls._connection = SFTPClient.from_transport(transport)
+
+    @staticmethod
+    def uploading_info(uploaded_file_size, total_file_size):
+
+        logging.info('uploaded_file_size : {} total_file_size : {}'.
+                     format(uploaded_file_size, total_file_size))
+
+    def upload(self, local_path, remote_path):
+
+        self._connection.put(localpath=local_path,
+                             remotepath=remote_path,
+                             callback=self.uploading_info,
+                             confirm=True)
+
+    def close(self):
+        self._connection.close()
+
+
+
 if __name__ == "__main__":
 
-  A = client_socket("AndersonCJ_Chen")
+  # A = client_socket("AndersonCJ_Chen")
   # A.client.send("done".encode('utf-8'))
   #api = {"gameId":123, "excutemode":"periodic"}
   #B = A.control(**api)
     
-  C = A.sendfile("Screen Shot 2020-10-24 at 11.01.26 AM.zip")
-'''
+  # C = A.sendfile("Screen Shot 2020-10-24 at 11.01.26 AM.zip")
+  hostname = socket.gethostname()
+  IPadrr = socket.gethostbyname(hostname)
+  user = 'RD'
+  password = 'Aa123456'
+  client = SftpClient(IPadrr, 22, user,)

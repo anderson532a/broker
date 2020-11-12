@@ -1,5 +1,6 @@
 import winrm
 import socket
+from paramiko import Transport, SFTPClient
 import logging, json, time
 FORMAT = "%(asctime)s -%(levelname)s : %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
@@ -46,6 +47,7 @@ class client_socket:
     logging.info(f"client receive = {msg}")
     return json.loads(msg)
   
+  # 大檔案傳輸速度不佳
   def sendfile(self, filename, newname):
     self.client.send("sendfile".encode('utf-8'))
     R = self.client.recv(1024).decode('utf-8')
@@ -75,51 +77,76 @@ class client_socket:
         logging.error("file error", exc_info=True)
 
 
-_connection = None
+class SftpClient:
+  _connection = None
 
-    def __init__(self, host, port, username, password):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
-        self.create_connection(self.host, self.port,
-                               self.username, self.password)
+  def __init__(self, ip):
+    self.ip = ip
+    self.port = 22
+    self.username = _account[self.host]
+    self.password = _pwd[_account[self.ip]] 
+    self.create_connection(self.ip, self.port,
+                            self.username, self.password)
 
-    @classmethod
-    def create_connection(cls, host, port, username, password):
-      
-        transport = Transport(sock=(host, port))
-        transport.connect(username=username, password=password)
-        cls._connection = SFTPClient.from_transport(transport)
+  @classmethod
+  def create_connection(cls, host, port, username, password):
+    transport = Transport(sock=(host, port))
+    transport.connect(username=username, password=password)
+    cls._connection = SFTPClient.from_transport(transport)
 
-    @staticmethod
-    def uploading_info(uploaded_file_size, total_file_size):
+  @staticmethod
+  def size_convert(byte):
+    BB = float(byte)
+    KB = float(1024)
+    MB = float(KB ** 2)
+    GB = float(KB ** 3)
 
-        logging.info('uploaded_file_size : {} total_file_size : {}'.
-                     format(uploaded_file_size, total_file_size))
+    if KB <= BB < MB:
+      return round(BB/KB, 2)
+    elif MB <= BB < GB:
+      return round(BB/MB, 2)
+    elif GB <= BB:
+      return round(BB/GB, 2)
+    else:
+      return BB
 
-    def upload(self, local_path, remote_path):
+  @classmethod
+  def uploading_info(cls, uploaded_file_size, total_file_size, UP_buffer = 0):
+    UP = cls.size_convert(uploaded_file_size)
+    TO = cls.size_convert(total_file_size)
+    if UP_buffer < round(UP):
+      UP_buffer = UP
+      logging.info('uploaded_file_size : {} total_file_size : {}'.
+                  format(UP, TO))
 
-        self._connection.put(localpath=local_path,
-                             remotepath=remote_path,
-                             callback=self.uploading_info,
-                             confirm=True)
+  def upload(self, filename, name):
 
-    def close(self):
-        self._connection.close()
+    local_path = 'C:\\Users\\RD\\Desktop\\' + f"{filename}"
+    remote_path = 'C:\\Users\\RD\\Desktop\\broker\\server\\' + f"{name}"
+    self._connection.put(localpath=local_path,
+                          remotepath=remote_path,
+                          callback=self.uploading_info,
+                          confirm=True)
+
+  def close(self):
+    logging.info("upload finish")
+    self._connection.close()
 
 
-
+'''
 if __name__ == "__main__":
 
   # A = client_socket("AndersonCJ_Chen")
   # A.client.send("done".encode('utf-8'))
   #api = {"gameId":123, "excutemode":"periodic"}
   #B = A.control(**api)
-    
+  
   # C = A.sendfile("Screen Shot 2020-10-24 at 11.01.26 AM.zip")
   hostname = socket.gethostname()
   IPadrr = socket.gethostbyname(hostname)
   user = 'RD'
   password = 'Aa123456'
-  client = SftpClient(IPadrr, 22, user,)
+  sclient = SftpClient(IPadrr)
+  sclient.upload('')
+  sclient.close()
+  '''

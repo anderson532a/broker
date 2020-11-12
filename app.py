@@ -91,7 +91,9 @@ def addgame():
     for i in server_ip:
         upload = remote_control.client_socket(i)
         result.update(upload.control(**CONFIG))
-        upload.sendfile(Zip.filename, File)
+        filetransfer = SftpClient(i)
+        filetransfer.upload(filename=Zip.filename, name=File)
+        filetransfer.close()
         os.remove(Zip.filename)
 
     if "false" in result.items():

@@ -181,33 +181,9 @@ class Handler(BaseRequestHandler):
             logging.info(f"send length = {len(self.data)}")
             logging.debug(f"server receive = {self.data}")
             i += 1
-
+            
             if self.data == bytes("sendfile".encode()) or self.data == bytes("done".encode()):
-                self.request.send("ready".encode('utf-8'))
-                filename = self.request.recv(1024).strip().decode('utf-8')
-                logging.debug(f"server receive file : {filename}")
-                try:
-                    with open (filename, "wb") as wb:
-                        while self.data != bytes("done".encode()):
-                            self.data = self.request.recv(4096)
-                            # logging.debug(f"data : {self.data}")
-                            logging.info("server writing file....")
-                            if not self.data:
-                                break
-                            wb.write(self.data)
-
-                    self.request.sendall("TRUE".encode('utf-8'))
-                    logging.info("file sending finish")
-                    File = filename.strip('.zip')
-                    logging.debug(f"rec file name : {File}")
-                    with ZipFile(filename, 'r') as zp:
-                        zp.extractall(os.path.join(gamepath, f"{File}"))
-                        logging.info("unzip success")
-                    os.remove(filename)
-
-                except:
-                    logging.error("file error", exc_info=True)
-                    self.request.sendall("FALSE".encode('utf-8'))
+                
                 
             elif len(self.data) > 0:
                 raw = self.data.decode('utf-8')

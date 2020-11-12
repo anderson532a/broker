@@ -6,11 +6,12 @@ import SQL_connect
 c = ".config"
 
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\"
-
+diclist = ['[core]\n', '[video]\n', '[audio]\n', '[filter]\n',  '[ga-server-event-driven]\n', '[ga-server-periodic]\n']
 class read_in:
 # read config file  
-    def __init__(self, name):
-        os.chdir(configpath)
+    def __init__(self, name, path=0):
+        if path == 0:
+            os.chdir(configpath)
         logging.debug(f"now path : {Path.cwd()}")
         self.name = f"server.{name}.conf"
         try:
@@ -61,15 +62,29 @@ class edit_config(read_in):
             newlist.append(line)
 
         if A == True:
+            newlist = self.list
             logging.info("- config append -")
-            B = False
             dstr = d + "\n"
+            other = " = ".join([k, v]) + "\n"
             if dstr in self.list:
-                logging.info(f"find {d} in {self.list.index(dstr)}")
-                
-            other = " = ".join([k, v])
-            newlist.append(other)
-        
+                logging.info("have dictionary")
+                num1 = diclist.index(dstr) + 1
+                logging.info(f"diclist {d} next number:{num1}")
+                locate = self.list.index(diclist[num1]) - 2
+                newlist.insert(locate, other)
+
+            else:
+                logging.info("miss dictionary")
+                num1 = diclist.index(dstr) + 1
+                logging.info(f"diclist {d} next number:{num1}")
+                for i in range(num1, 6):
+                    if diclist[i] in self.list:
+                        num2 = i
+                        break
+                locate = self.list.index(diclist[num2]) - 1
+                newlist.insert(locate, "\n")
+                newlist.insert(locate + 1, dstr)
+                newlist.insert(locate + 2, other)
            
         writein = "".join(newlist)
         # logging.debug("write in :" + f"{writein}")
@@ -88,7 +103,7 @@ class edit_config(read_in):
 
 
 # create new config file
-class create_new:
+class create_new(read_in):
     def __init__(self, name, mode = "periodic"):
         self.name = name
         self.mode = mode
@@ -97,12 +112,15 @@ class create_new:
         template = Path.cwd() / f"server.{self.mode}.conf"
         confname = f"server.{self.name}.conf"
         newpath = configpath + confname
+        super().__init__(self.mode, path=1)
         try:
             with open(newpath, 'x') as fx:
                 logging.debug("write mode x, create name :"+ f"{self.name}")
-                fx.write(template.read_text())
-                fx.seek(0,0)
-                fx.write(f"# configuration for {self.name}" + "\n")
+                self.list[1] = '# configuration for' + f"{self.name}" + '\n'
+                logging.debug(f'new create: {self.list}')
+                writein = "".join(self.list)
+                fx.seek(0, 0)
+                fx.write(writein)
                 logging.info("new create success")
                 return "TRUE"
         except FileExistsError:
@@ -110,12 +128,15 @@ class create_new:
             return "FALSE"
 
 
-
+'''
 if __name__ == "__main__": # for testing
+    
     A = {'dictionary':"[core]", "gaColumn": "include = common/server-common.conf", "value": 'True'}
     B = {'dictionary':"[ga-server-periodic]", "gaColumn": "enable-audio", "value": 'false'}
     C = {'dictionary':"[video]", "gaColumn": "video-fps", "value": 50}
     test = edit_config("tttttt")
     test.match_modify(**C)
-
-
+    
+    create_new('ABC').create()
+    
+'''

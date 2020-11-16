@@ -89,11 +89,12 @@ def addgame():
     CONFIG['file'] = File
     result = {}
     for i in server_ip:
-        upload = remote_control.client_socket(i)
-        result.update(upload.control(**CONFIG))
+        Upload = remote_control.client_socket(i)
+        result.update(Upload.control(**CONFIG))
         filetransfer = SftpClient(i)
         filetransfer.upload(filename=Zip.filename, name=File)
         filetransfer.close()
+        Upload.client.send("file_finish")
         os.remove(Zip.filename)
 
     if "false" in result.items():
@@ -105,11 +106,11 @@ def addgame():
 
 @app.route('/Conf', methods=['POST'])
 def config():
-    gname = request.form.get('gamename', type=str)
-    # EDIT = dict(request.form)['config']
-    log.debug(request.form)
-    if 'config' in request.form:
-        EDIT = request.form['config']
+    BODY= request.get_json()
+    log.debug(f"post body: {BODY}")
+    log.debug(f"lentgh {len(BODY['config'])}")
+    ''' # 修改轉換字串
+    if 'config' in EDIT:
         key = ""
         NEWEDIT = EDIT.replace("\'", "\"")
         for i in range(len(EDIT)):
@@ -124,18 +125,16 @@ def config():
                 key = ""
         log.debug(NEWEDIT)  
         EDIT = json.loads(NEWEDIT)
-        if len(EDIT) < 1:
-            log.warning("no data in config body")
-        else:
-            for MODI in EDIT:
-                log.debug(f"modi : {MODI}")
-                MODI["gamename"] = gname
-                for i in server_ip:
-                    config = remote_control.client_socket(i)
-                    result = config.control(**MODI)
-                
+    '''
+    if len(EDIT) < 1:
+        log.warning("no data in config body")
+        return "no config body"
+    else:
+        for i in server_ip:
+            config = remote_control.client_socket(i)
+            result = config.control(**BODY)
 
-    return "get config form"
+        return "get config form"
 
 
 if __name__ == "__main__":

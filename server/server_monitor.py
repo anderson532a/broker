@@ -181,11 +181,8 @@ class Handler(BaseRequestHandler):
             logging.info(f"send length = {len(self.data)}")
             logging.debug(f"server receive = {self.data}")
             i += 1
-            
-            if self.data == bytes("sendfile".encode()) or self.data == bytes("done".encode()):
-                
-                
-            elif len(self.data) > 0:
+
+            if len(self.data) > 0:
                 raw = self.data.decode('utf-8')
                 self.brokercmd = json.loads(raw)
                 if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
@@ -229,9 +226,10 @@ class Handler(BaseRequestHandler):
                     self.filename = self.brokercmd["file"]
                     os.chdir(oripath)
                     NEWconf = config_editor.create_new(name = gname).create()
+
                     retdata = {f"{IPadrr}": NEWconf}
 
-                elif "gamename" and "gaColumn" in self.brokercmd:
+                elif "gamename" and 'config' in self.brokercmd:
                     gname = self.brokercmd["gamename"]
                     data = {}
                     data['dictionary'] = self.brokercmd['dictionary']

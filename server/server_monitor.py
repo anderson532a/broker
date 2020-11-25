@@ -231,16 +231,18 @@ class Handler(BaseRequestHandler):
 
                 elif "gamename" and 'config' in self.brokercmd:
                     gname = self.brokercmd["gamename"]
-                    data = {}
-                    data['dictionary'] = self.brokercmd['dictionary']
-                    data['gaColumn'] = self.brokercmd['gaColumn']
-                    if self.brokercmd.get('value'):
-                        data['value'] = self.brokercmd['value']
-                    elif self.brokercmd.get('newValue'):
-                        data['newValue'] = self.brokercmd['newValue']
-
-                    MODIconf = config_editor.edit_config(gname).match_modify(**data)
-                    retdata = {f"{IPadrr}": MODIconf}
+                    MODIconf = self.brokercmd['config']
+                    resconf = []
+                    for i in range(len(MODIconf)):
+                        data = {}
+                        data['dictionary'] = MODIconf[i]['dictionary']
+                        data['gaColumn'] = MODIconf[i]['gaColumn']
+                        if MODIconf[i].get('value'):
+                            data['value'] = MODIconf[i]['value']
+                        elif MODIconf[i].get('newValue'):
+                            data['newValue'] = MODIconf[i]['newValue']
+                        resconf.append(config_editor.edit_config(gname).match_modify(**data))
+                    retdata = {f"{IPadrr}": resconf}
 
                 else:
                     logging.error("server can't recognize args")

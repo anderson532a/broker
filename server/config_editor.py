@@ -42,7 +42,7 @@ class edit_config(read_in):
         for line in self.list:
             if k in line: # find match
                 if "=" in k:
-                    logging.info("- config comment -")
+                    logging.info("- config commet(=) -")
                     if v == "False":
                         line = "# "+line
                     else:
@@ -50,7 +50,7 @@ class edit_config(read_in):
                         line = line.strip()
                 elif '#' in v:
                     # commet something
-                    logging.info("- config comment -")
+                    logging.info("- config commet -")
                     pass 
                 else:
                     logging.info("- config modify -")

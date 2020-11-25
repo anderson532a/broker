@@ -98,7 +98,7 @@ def addgame():
         os.remove(Zip.filename)
 
     if "false" in result.items():
-        return {"status": "FALSE try edit"}
+        return {"status": "FALSE to upload"}
     else:
         return {"status": "TRUE"}
     
@@ -108,7 +108,7 @@ def addgame():
 def config():
     BODY= request.get_json()
     log.debug(f"post body: {BODY}")
-    log.debug(f"lentgh {len(BODY['config'])}")
+    C = BODY['config']
     ''' # 修改轉換字串
     if 'config' in EDIT:
         key = ""
@@ -126,15 +126,20 @@ def config():
         log.debug(NEWEDIT)  
         EDIT = json.loads(NEWEDIT)
     '''
-    if len(EDIT) < 1:
+    if len(BODY['config']) < 1:
         log.warning("no data in config body")
         return "no config body"
     else:
+        pass
+        
         for i in server_ip:
             config = remote_control.client_socket(i)
             result = config.control(**BODY)
-
-        return "get config form"
+            if "false" in result.items():
+                log.waring(f"wrong info: {result}")
+                return {"status": "Edit failed"}
+            
+        return {"status": "Edit sucess"}
 
 
 if __name__ == "__main__":

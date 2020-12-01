@@ -95,8 +95,8 @@ def addgame():
         filetransfer.upload(filename=Zip.filename, name=File)
         filetransfer.close()
         Upload.client.send("file_finish")
-        os.remove(Zip.filename)
-
+    
+    os.remove(Zip.filename)
     if "false" in result.items():
         return {"status": "FALSE to upload"}
     else:
@@ -107,31 +107,13 @@ def addgame():
 @app.route('/Conf', methods=['POST'])
 def config():
     BODY= request.get_json()
-    log.debug(f"post body: {BODY}")
+    # log.debug(f"post body: {BODY}")
     C = BODY['config']
-    ''' # 修改轉換字串
-    if 'config' in EDIT:
-        key = ""
-        NEWEDIT = EDIT.replace("\'", "\"")
-        for i in range(len(EDIT)):
-            if EDIT[i] == ":":
-                for j in range(i-1, 0, -1):
-                    if EDIT[j] == " ":
-                        break 
-                    key = key + EDIT[j]
-                key = key[::-1]
-                if f"\"{key}\"" not in NEWEDIT:
-                    NEWEDIT = NEWEDIT.replace(f"{key}", f"\"{key}\"")
-                key = ""
-        log.debug(NEWEDIT)  
-        EDIT = json.loads(NEWEDIT)
-    '''
+    
     if len(BODY['config']) < 1:
         log.warning("no data in config body")
         return "no config body"
     else:
-        pass
-        
         for i in server_ip:
             config = remote_control.client_socket(i)
             result = config.control(**BODY)
@@ -139,10 +121,8 @@ def config():
                 log.waring(f"wrong info: {result}")
                 return {"status": "Edit failed"}
             
-        return {"status": "Edit sucess"}
+        return {"status": "Edit success"}
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
-    
-

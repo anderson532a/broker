@@ -18,7 +18,7 @@ class read_in:
             with open(self.name,'r') as fr:
                 self.list = fr.readlines()
                 logging.info("read in success")
-                logging.debug(self.list)
+                # logging.debug(self.list)
 
         except FileNotFoundError:
             logging.error("can't find", exc_info=True)
@@ -32,10 +32,10 @@ class edit_config(read_in):
     def match_modify(self, **change):
         d = change['dictionary']
         k = change["gaColumn"]
-        if "newValue" in change:
-            v = str(change["newValue"])
-        else:
+        if "value" in change:
             v = str(change["value"])
+        else:
+            v = str(change["newValue"])
         newlist = []
         logging.info(f"write key : {k}; value : {v}")
         A = True
@@ -69,12 +69,12 @@ class edit_config(read_in):
             if dstr in self.list:
                 logging.info("have dictionary")
                 num1 = diclist.index(dstr) + 1
-                logging.info(f"diclist {d} next number:{num1}")
+                logging.info(f"dic_list {d} next number:{num1}")
                 locate = self.list.index(diclist[num1]) - 2
                 newlist.insert(locate, other)
 
             else:
-                logging.info("miss dictionary")
+                logging.info("empty dictionary")
                 num1 = diclist.index(dstr) + 1
                 logging.info(f"diclist {d} next number:{num1}")
                 for i in range(num1, 6):

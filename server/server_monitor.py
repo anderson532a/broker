@@ -177,7 +177,7 @@ class Handler(BaseRequestHandler):
             if PAR == "k":
                 GS.initial()
                 now = GS.get_nowgame()
-            self.data = self.request.recv(1024).strip()
+            self.data = self.request.recv(2048).strip()
             logging.info(f"send length = {len(self.data)}")
             logging.debug(f"server receive = {self.data}")
             i += 1
@@ -259,5 +259,5 @@ if __name__ == "__main__":  # server_socket
     GS = game_status()
     sync_DB(GS.get_nowgame()).pid_check()
     server = ThreadingTCPServer(ADDR, Handler)
-    logging.info("server_socket start")
+    logging.info(f"server_socket start IP : {IPadrr}")
     server.serve_forever()

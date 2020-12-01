@@ -40,10 +40,10 @@ class readSQL(SQL_CMD):
             if self.condi != {} :
                 for k, v in self.condi.items():
                     self.CMD = self.CMD1 + f" where {k}=\"{v}\""
-                    logging.debug(f"CMD : {self.CMD}")
+                    # logging.debug(f"SQL CMD : {self.CMD}")
             else:
                 self.CMD = self.CMD1
-                logging.debug(f"CMD : {self.CMD}")
+                # logging.debug(f"SQL CMD : {self.CMD}")
             super().execute()
             read = cur.fetchall()
             # for i in read:

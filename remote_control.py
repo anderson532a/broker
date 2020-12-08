@@ -30,22 +30,31 @@ class remote:
 class client_socket:
 
     def __init__(self, hostip):
+        self.connection(hostip)
+    
+    @classmethod
+    def connection(cls, hostip):
         PORT = 8000
-        self.host = hostip
+        cls.host = hostip
         try:
-            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.client.connect((self.host, PORT))
+            cls.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cls.client.connect((cls.host, PORT))
         except socket.gaierror:
             logging.error("socket error", exc_info=True)
-    
 
-    def control(self, **cmd):
-        jsonobj = json.dumps(cmd)
-        self.client.sendall(jsonobj.encode('utf-8'))
-        logging.info(f"client send = {jsonobj}" )
-        msg = self.client.recv(2048).decode('utf-8')
+    @classmethod
+    def jsncontrol(cls, **cmd):
+        sndg = json.dumps(cmd)
+        logging.info(f"client send = {sndg}")
+        cls.client.sendall(sndg.encode('utf-8'))
+        msg = cls.client.recv(2048).decode('utf-8')
         logging.info(f"client receive = {msg}")
         return json.loads(msg)
+    
+   
+        
+
+
 
 # 大檔案傳輸速度不佳
 def sendfile(self, filename, newname):
@@ -83,7 +92,7 @@ class SftpClient:
     def __init__(self, ip):
         self.ip = ip
         self.port = 22
-        self.username = _account[self.host]
+        self.username = _account[self.ip]
         self.password = _pwd[_account[self.ip]] 
         self.create_connection(self.ip, self.port,
                                 self.username, self.password)
@@ -114,15 +123,15 @@ class SftpClient:
     def uploading_info(cls, uploaded_file_size, total_file_size, UP_buffer = 0):
         UP = cls.size_convert(uploaded_file_size)
         TO = cls.size_convert(total_file_size)
-        if UP_buffer < round(UP):
+        if UP_buffer < int(UP):
             UP_buffer = UP
             logging.info('uploaded_file_size : {} total_file_size : {}'.
                         format(UP, TO))
 
     def upload(self, filename, name):
 
-        local_path = 'C:\\Users\\RD\\Desktop\\' + f"{filename}"
-        remote_path = 'C:\\Users\\RD\\Desktop\\broker\\server\\' + f"{name}"
+        local_path = 'C:\\Users\\RD\\Desktop\\broker\\' + f"{filename}"
+        remote_path = gamepath + f"{name}"
         self._connection.put(localpath=local_path,
                             remotepath=remote_path,
                             callback=self.uploading_info,

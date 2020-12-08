@@ -10,9 +10,27 @@ ALLOWED_EXTENSIONS = set(['zip'])
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
-server_ip = ("192.168.43.196", )
-server_status = {server_ip[0]: ""}
+another = ''
+server_ip = (another, "192.168.43.196") # server ip
+server_status = {server_ip[0]: None} # {server ip : player ip}
 log = app.logger
+
+
+class gameserver_CMD:
+    _connection = None
+    def __init__(self, ip):
+        self.CMD = {"serverstatus":"refresh"}
+        self.ip = ip
+        self._connection = remote_control.client_socket(self.ip)
+
+    def refresh(self):
+        self._connection.jsncontrol(**self.CMD)
+
+    def APICTL(self, **DIC):
+        self.CMD = DIC
+        result = self._connection.jsncontrol(**self.CMD)
+        return result
+
 
 @app.route("/")
 def home():
@@ -39,6 +57,11 @@ def test():
         print(DATA, IP)
         return "good"
 
+@app.route('/Status', methods=['GET'])
+def serverstatus():
+    global server_status
+    pass
+
 
 # api excute game
 @app.route('/IP', methods=['GET'])
@@ -46,17 +69,21 @@ def startGame():
     global server_status
     startapi = dict(request.args)
     conip = request.remote_addr
+    # log.info(server_status)
     for i in server_ip:
-        # if server_status[i] == "":
-        game = remote_control.client_socket(i)
-        result = game.control(**startapi)
-        server_status[i] = conip
-        return jsonify(result)
-        '''
+        log.info(f"serverIp :{i}")
+        if i in server_status.values():
+            retdata = {"gamestatus": "TRUE",
+                                   "gameIP": i, "PID": ""}
+            return jsonify(retdata)
+        elif i == '':
+            pass
         else:
-            log.warning("server is full !!!")
-            return jsonify({"gamestatus": "FULL", "gameIP": "", "PID": ""})
-'''
+            result = gameserver_CMD(i).APICTL(**startapi)
+            log.debug(result)
+            # server_status[i] = conip
+            return jsonify(result)
+
 
 @app.route('/End', methods=['GET'])
 def endGame():
@@ -65,8 +92,9 @@ def endGame():
     ip = request.args.get("serverIp", type=str)
     pid = request.args.get("pid", type=str)
     remote_status = remote_control.remote(ip).taskkill(exmode, pid)
+    result = gameserver_CMD(ip).refresh()
 
-    if remote_status == 0:
+    if remote_status == 0 or "IDLE" in result:
         server_status[ip] = ""
         return jsonify(gamestatus="end game sucessful")
     else:
@@ -89,12 +117,11 @@ def addgame():
     CONFIG['file'] = File
     result = {}
     for i in server_ip:
-        Upload = remote_control.client_socket(i)
-        result.update(Upload.control(**CONFIG))
-        filetransfer = SftpClient(i)
+        result.update(gameserver_CMD(i).APICTL(**CONFIG))
+        filetransfer = remote_control.SftpClient(i)
         filetransfer.upload(filename=Zip.filename, name=File)
         filetransfer.close()
-        Upload.client.send("file_finish")
+        Upload.client.send("file_finish".encode('utf-8'))
     
     os.remove(Zip.filename)
     if "false" in result.items():
@@ -115,8 +142,7 @@ def config():
         return "no config body"
     else:
         for i in server_ip:
-            config = remote_control.client_socket(i)
-            result = config.control(**BODY)
+            result = gameserver_CMD(i).APICTL(**BODY)
             if "false" in result.items():
                 log.waring(f"wrong info: {result}")
                 return {"status": "Edit failed"}

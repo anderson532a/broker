@@ -15,6 +15,7 @@ oripath = os.getcwd()
 S_EVD = "start ga-server-event-driven config//"
 S_PD = "start /min ga-server-periodic config//"
 TER = "taskkill /F /IM "
+brokerIP = '192.168.43.196'
 
 hostname = socket.gethostname()
 IPadrr = socket.gethostbyname(hostname)
@@ -91,10 +92,10 @@ class excute_game:
 
     def get_PID(self):
         if self.pid != "":
-            logging.info(f"get pid : {self.pid}")
+            logging.info(f"NEW game pid : {self.pid}")
         else:
             logging.info("lost pid")
-        return self.pid
+        return str(self.pid)
     
     def auto(self, A ,B):
         self.set_config(A, B)
@@ -124,7 +125,8 @@ class sync_DB:
         if self.pid == '':
             logging.info("NO game pid in server")
             DB = self.S.select(*("pid", "status"), **{"serverIp":IPadrr})
-            # logging.debug(f"{DB}")
+            # logging.debug(f"{len(DB)}")
+            assert len(DB) != 0, "no read in select CMD, check IP"         
             TF = list(zip(*DB))
             if 'TRUE' in TF[1]:
                 self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
@@ -140,6 +142,7 @@ class sync_DB:
         Data = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
         ppid = ''
         logging.info('-- gameDB_check start --')
+        assert len(Data) != 0, "no read in select CMD, check IP"  
         TF = list(zip(*Data))
         # 由DB 關遊戲
         
@@ -161,6 +164,7 @@ class sync_DB:
                 # 重複PID
                 if line[1] == ppid:
                     logging.info('DB has double pid')
+                    # delete DB
          '''
 
 
@@ -169,6 +173,7 @@ class Handler(BaseRequestHandler):
         i = 0
         while True:
             now = GS.get_nowgame()
+            logging.info("-- socket server listening --")
             logging.info(f"nowpid : {now}")
             sync_DB(now).pid_check()
             if i > 0:
@@ -179,7 +184,7 @@ class Handler(BaseRequestHandler):
                 now = GS.get_nowgame()
             self.data = self.request.recv(2048).strip()
             logging.info(f"send length = {len(self.data)}")
-            logging.debug(f"server receive = {self.data}")
+            logging.info(f"server receive = {self.data}")
             i += 1
 
             if len(self.data) > 0:
@@ -220,7 +225,12 @@ class Handler(BaseRequestHandler):
                     else:
                         retdata = {"gamestatus": "TRUE",
                                    "gameIP": IPadr, "PID": PID}
-
+                
+                elif "refresh" in self.brokercmd.values():
+                    GS.initial()
+                    logging.info("-- server status refresh --")
+                    retdata = {"gamestatus": "IDLE"}
+                    
                 elif "gamename" and "file" in self.brokercmd:
                     gname = self.brokercmd["gamename"]
                     self.filename = self.brokercmd["file"]
@@ -248,7 +258,7 @@ class Handler(BaseRequestHandler):
                     logging.error("server can't recognize args")
 
                 self.request.sendall(json.dumps(retdata).encode('utf-8'))
-            
+                logging.info(f'server send = {retdata}')
             else:
                 logging.warning("didn't receive by broker")
                 break

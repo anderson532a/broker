@@ -117,7 +117,7 @@ class create_new(read_in):
             with open(newpath, 'x') as fx:
                 logging.debug("write mode x, create name :"+ f"{self.name}")
                 self.list[1] = '# configuration for' + f"{self.name}" + '\n'
-                logging.debug(f'new create: {self.list}')
+                # logging.debug(f'new create: {self.list}')
                 writein = "".join(self.list)
                 fx.seek(0, 0)
                 fx.write(writein)

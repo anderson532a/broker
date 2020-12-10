@@ -114,22 +114,42 @@ class excute_game:
 
 
 class sync_DB:
+    S = None
     def __init__(self, PID):
-        self.S = SQL_connect.readSQL()
+        #self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
         self.pid = PID
+
+    @classmethod
+    def DB_check(cls):
+        cls.S = SQL_connect.readSQL()
+        # select gamename, pid, status from gaconnection where serverIp = IPadrr
+        data = cls.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr}
+        # logging.debug(f"{len(data)}")
+        if len(data) == 0:
+            logging.info("server IP has no read in select CMD")
+        else:
+            TF = list(zip(*data))
+            return TF
+
 
     # 同步DB server 之 PID 狀態
     def pid_check(self):
         logging.info('-- pid_check start --')
         if self.pid == '':
             logging.info("NO game pid in server")
+            '''
             DB = self.S.select(*("pid", "status"), **{"serverIp":IPadrr})
-            # logging.debug(f"{len(DB)}")
-            assert len(DB) != 0, "no read in select CMD, check IP"         
-            TF = list(zip(*DB))
-            if 'TRUE' in TF[1]:
-                self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
+            
+            if len(DB) == 0:
+                logging.info("server IP has no read in select CMD")
+            else:
+                TF = list(zip(*DB))
+                '''
+            CK = self.DB_check()
+            if CK != None:
+                if 'TRUE' in CK[2]:
+                    self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
         elif psutil.pid_exists(int(self.pid)) != True:
             logging.info("pid diff & change")
             self.I.update(col = "pid", val = self.pid, **{"status":"FALSE"})
@@ -137,16 +157,14 @@ class sync_DB:
         else:
             logging.info("pid exist")
 
+
     def gameDB_check(self):
-        # select gamename, pid, status from gaconnection where serverIp = IPadrr
-        Data = self.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr})
-        ppid = ''
         logging.info('-- gameDB_check start --')
-        assert len(Data) != 0, "no read in select CMD, check IP"  
-        TF = list(zip(*Data))
-        # 由DB 關遊戲
-        
-        if 'TRUE' not in TF[2]:
+        ppid = ''
+        CK = self.DB_check()
+
+        if 'TRUE' not in CK[2] : 
+            # 由DB 關遊戲
             if self.pid != '':
                 excute_game.kill_game(self.pid)
                 return "k"
@@ -165,7 +183,7 @@ class sync_DB:
                 if line[1] == ppid:
                     logging.info('DB has double pid')
                     # delete DB
-         '''
+        '''
 
 
 class Handler(BaseRequestHandler):

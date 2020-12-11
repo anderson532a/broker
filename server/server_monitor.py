@@ -1,11 +1,15 @@
-import os, sys
-import subprocess, psutil
+import os
+import sys
+import subprocess
+import psutil
 from zipfile import ZipFile
 import socket
 import time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
-import logging, json
-import config_editor, SQL_connect
+import logging
+import json
+import config_editor
+import SQL_connect
 
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
@@ -23,29 +27,30 @@ IP = ""
 FORMAT = "%(asctime)s -%(levelname)s : %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
+
 class game_status:
     def __init__(self):
-        self.nowgame = ''
-        self.gamepid = {} # {nowgame: gamename}
+        self.nowpid = ''
+        self.gamepid = {}  # {nowpid: gamename}
         self.log()
-    
+
     def log(self):
         logging.info(f"now game: {self.gamepid}")
 
     def initial(self):
-        self.nowgame = ''
+        self.nowpid = ''
         self.gamepid = {}
         self.log()
 
     def update_status(self, pid, name):
-        self.nowgame = pid
+        self.nowpid = pid
         self.gamepid = {}
         self.gamepid[pid] = name
         self.log()
 
     def get_nowgame(self):
-        return self.nowgame
-    
+        return self.nowpid
+
     def get_len(self):
         return len(self.gamepid)
 
@@ -96,8 +101,8 @@ class excute_game:
         else:
             logging.info("lost pid")
         return str(self.pid)
-    
-    def auto(self, A ,B):
+
+    def auto(self, A, B):
         self.set_config(A, B)
         IPadr = self.get_IP()
         PID = self.get_PID()
@@ -115,6 +120,7 @@ class excute_game:
 
 class sync_DB:
     S = None
+
     def __init__(self, PID):
         #self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
@@ -124,7 +130,8 @@ class sync_DB:
     def DB_check(cls):
         cls.S = SQL_connect.readSQL()
         # select gamename, pid, status from gaconnection where serverIp = IPadrr
-        data = cls.S.select(*("gamename", "pid", "status"), **{"serverIp":IPadrr}
+        data = cls.S.select(*("gamename", "pid", "status"),
+                            **{"serverIp": IPadrr})
         # logging.debug(f"{len(data)}")
         if len(data) == 0:
             logging.info("server IP has no read in select CMD")
@@ -132,8 +139,8 @@ class sync_DB:
             TF = list(zip(*data))
             return TF
 
-
     # 同步DB server 之 PID 狀態
+
     def pid_check(self):
         logging.info('-- pid_check start --')
         if self.pid == '':
@@ -149,27 +156,27 @@ class sync_DB:
             CK = self.DB_check()
             if CK != None:
                 if 'TRUE' in CK[2]:
-                    self.I.update(col = "status", val = "TRUE", **{"status":"FALSE"})
+                    self.I.update(col="status", val="TRUE",
+                                  **{"status": "FALSE"})
         elif psutil.pid_exists(int(self.pid)) != True:
             logging.info("pid diff & change")
-            self.I.update(col = "pid", val = self.pid, **{"status":"FALSE"})
-            
+            self.I.update(col="pid", val=self.pid, **{"status": "FALSE"})
+
         else:
             logging.info("pid exist")
-
 
     def gameDB_check(self):
         logging.info('-- gameDB_check start --')
         ppid = ''
         CK = self.DB_check()
 
-        if 'TRUE' not in CK[2] : 
+        if 'TRUE' not in CK[2]:
             # 由DB 關遊戲
             if self.pid != '':
                 excute_game.kill_game(self.pid)
                 return "k"
         else:
-            for line in reversed(Data):
+            for line in reversed(data):
                 # 檢查DB status
                 if 'TRUE' in line:
                     if line[1] == str(self.pid):
@@ -177,7 +184,8 @@ class sync_DB:
                     else:
                         logging.info('server & DB diff TRUE')
                         # update gaconnection set status='FALSE' where PID=self.pid
-                        self.I.update(col="pid", val = line[1], **{"status":"FALSE"})
+                        self.I.update(
+                            col="pid", val=line[1], **{"status": "FALSE"})
                 '''
                 # 重複PID
                 if line[1] == ppid:
@@ -190,7 +198,7 @@ class Handler(BaseRequestHandler):
     def handle(self):
         i = 0
         while True:
-            now = GS.get_nowgame()
+            now = GS.get_nowpid()
             logging.info("-- socket server listening --")
             logging.info(f"nowpid : {now}")
             sync_DB(now).pid_check()
@@ -218,7 +226,7 @@ class Handler(BaseRequestHandler):
 
                     if now == '':
                         logging.info("--- first game start ---")
-                        [IPadr, PID]= game.auto(config, exmode)
+                        [IPadr, PID] = game.auto(config, exmode)
                         if PID != "":
                             GS.update_status(PID, gamename)
 
@@ -230,7 +238,7 @@ class Handler(BaseRequestHandler):
                         else:
                             logging.info("--- another game ---")
                             excute_game.kill_game(now)
-                            [IPadr, PID]= game.auto(config, exmode)
+                            [IPadr, PID] = game.auto(config, exmode)
                             if PID != "":
                                 GS.update_status(PID, gamename)
 
@@ -243,17 +251,17 @@ class Handler(BaseRequestHandler):
                     else:
                         retdata = {"gamestatus": "TRUE",
                                    "gameIP": IPadr, "PID": PID}
-                
+
                 elif "refresh" in self.brokercmd.values():
                     GS.initial()
                     logging.info("-- server status refresh --")
                     retdata = {"gamestatus": "IDLE"}
-                    
+
                 elif "gamename" and "file" in self.brokercmd:
                     gname = self.brokercmd["gamename"]
                     self.filename = self.brokercmd["file"]
                     os.chdir(oripath)
-                    NEWconf = config_editor.create_new(name = gname).create()
+                    NEWconf = config_editor.create_new(name=gname).create()
 
                     retdata = {f"{IPadrr}": NEWconf}
 
@@ -269,7 +277,8 @@ class Handler(BaseRequestHandler):
                             data['value'] = MODIconf[i]['value']
                         elif MODIconf[i].get('newValue'):
                             data['newValue'] = MODIconf[i]['newValue']
-                        resconf.append(config_editor.edit_config(gname).match_modify(**data))
+                        resconf.append(config_editor.edit_config(
+                            gname).match_modify(**data))
                     retdata = {f"{IPadrr}": resconf}
 
                 else:
@@ -280,6 +289,7 @@ class Handler(BaseRequestHandler):
             else:
                 logging.warning("didn't receive by broker")
                 break
+
 
 if __name__ == "__main__":  # server_socket
     PORT = 8000

@@ -50,11 +50,6 @@ class client_socket:
         msg = cls.client.recv(2048).decode('utf-8')
         logging.info(f"client receive = {msg}")
         return json.loads(msg)
-    
-   
-        
-
-
 
 # 大檔案傳輸速度不佳
 def sendfile(self, filename, newname):

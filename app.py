@@ -121,7 +121,7 @@ def addgame():
         filetransfer = remote_control.SftpClient(i)
         filetransfer.upload(filename=Zip.filename, name=File)
         filetransfer.close()
-        Upload.client.send("file_finish".encode('utf-8'))
+        gameserver_CMD(i).APICTL({"serverstatus":"upload_finish"})
     
     os.remove(Zip.filename)
     if "false" in result.items():

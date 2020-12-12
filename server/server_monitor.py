@@ -132,7 +132,6 @@ class sync_DB:
         # select gamename, pid, status from gaconnection where serverIp = IPadrr
         data = cls.S.select(*("gamename", "pid", "status"),
                             **{"serverIp": IPadrr})
-        # logging.debug(f"{len(data)}")
         if len(data) == 0:
             logging.info("server IP has no read in select CMD")
         else:
@@ -169,41 +168,42 @@ class sync_DB:
         logging.info('-- gameDB_check start --')
         ppid = ''
         CK = self.DB_check()
+        DB = True
+        for i in range(10):
+            if 'TRUE' in CK[2]:
+                DB = True
+                break
+            else:
+                DB = False
+                logging.info(f'no TRUE in select data {i}')
+                time.sleep(1)
+                CK = self.DB_check()
 
-        if 'TRUE' not in CK[2]:
+        if DB = False:
             # 由DB 關遊戲
             if self.pid != '':
                 excute_game.kill_game(self.pid)
                 return "k"
         else:
-            for line in reversed(data):
+            for line in reversed(CK.data):
                 # 檢查DB status
                 if 'TRUE' in line:
                     if line[1] == str(self.pid):
                         logging.info('server & DB pid sync')
                     else:
-                        logging.info('server & DB diff TRUE')
+                        logging.info('server & DB diff pid')
                         # update gaconnection set status='FALSE' where PID=self.pid
                         self.I.update(
                             col="pid", val=line[1], **{"status": "FALSE"})
-                '''
-                # 重複PID
-                if line[1] == ppid:
-                    logging.info('DB has double pid')
-                    # delete DB
-        '''
 
 
 class Handler(BaseRequestHandler):
     def handle(self):
-        i = 0
         while True:
             now = GS.get_nowpid()
-            logging.info("-- socket server listening --")
+            logging.info("-- socket server listen loop --")
             logging.info(f"nowpid : {now}")
             sync_DB(now).pid_check()
-            if i > 0:
-                time.sleep(2)
             PAR = sync_DB(now).gameDB_check()
             if PAR == "k":
                 GS.initial()
@@ -211,7 +211,6 @@ class Handler(BaseRequestHandler):
             self.data = self.request.recv(2048).strip()
             logging.info(f"send length = {len(self.data)}")
             logging.info(f"server receive = {self.data}")
-            i += 1
 
             if len(self.data) > 0:
                 raw = self.data.decode('utf-8')
@@ -262,8 +261,10 @@ class Handler(BaseRequestHandler):
                     self.filename = self.brokercmd["file"]
                     os.chdir(oripath)
                     NEWconf = config_editor.create_new(name=gname).create()
-
                     retdata = {f"{IPadrr}": NEWconf}
+                
+                elif "upload_finish" in self.brokercmd:
+                    pass
 
                 elif "gamename" and 'config' in self.brokercmd:
                     gname = self.brokercmd["gamename"]

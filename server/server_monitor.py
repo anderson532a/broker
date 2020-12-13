@@ -1,16 +1,12 @@
-import os
-import sys
+import os, sys
 import subprocess
-import psutil
 from zipfile import ZipFile
 import socket
-import time
 from socketserver import BaseRequestHandler, ThreadingTCPServer
-import logging
-import json
+import logging, json, time
 import config_editor
 import SQL_connect
-
+###
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\"
@@ -48,7 +44,7 @@ class game_status:
         self.gamepid[pid] = name
         self.log()
 
-    def get_nowgame(self):
+    def get_nowpid(self):
         return self.nowpid
 
     def get_len(self):
@@ -119,8 +115,7 @@ class excute_game:
 
 
 class sync_DB:
-    S = None
-
+    data = None
     def __init__(self, PID):
         #self.S = SQL_connect.readSQL()
         self.I = SQL_connect.writeSQL()
@@ -128,14 +123,13 @@ class sync_DB:
 
     @classmethod
     def DB_check(cls):
-        cls.S = SQL_connect.readSQL()
         # select gamename, pid, status from gaconnection where serverIp = IPadrr
-        data = cls.S.select(*("gamename", "pid", "status"),
+        cls.data = SQL_connect.readSQL().select(*("gamename", "pid", "status"),
                             **{"serverIp": IPadrr})
-        if len(data) == 0:
+        if len(cls.data) == 0:
             logging.info("server IP has no read in select CMD")
         else:
-            TF = list(zip(*data))
+            TF = list(zip(*cls.data))
             return TF
 
     # 同步DB server 之 PID 狀態
@@ -169,7 +163,7 @@ class sync_DB:
         ppid = ''
         CK = self.DB_check()
         DB = True
-        for i in range(10):
+        for i in range(5):
             if 'TRUE' in CK[2]:
                 DB = True
                 break
@@ -178,14 +172,17 @@ class sync_DB:
                 logging.info(f'no TRUE in select data {i}')
                 time.sleep(1)
                 CK = self.DB_check()
+                # logging.info(f'{CK[2]}')
 
-        if DB = False:
+        if DB == False:
             # 由DB 關遊戲
             if self.pid != '':
                 excute_game.kill_game(self.pid)
                 return "k"
+            else:
+                pass
         else:
-            for line in reversed(CK.data):
+            for line in reversed(self.data):
                 # 檢查DB status
                 if 'TRUE' in line:
                     if line[1] == str(self.pid):
@@ -207,7 +204,7 @@ class Handler(BaseRequestHandler):
             PAR = sync_DB(now).gameDB_check()
             if PAR == "k":
                 GS.initial()
-                now = GS.get_nowgame()
+                now = GS.get_nowpid()
             self.data = self.request.recv(2048).strip()
             logging.info(f"send length = {len(self.data)}")
             logging.info(f"server receive = {self.data}")
@@ -263,8 +260,20 @@ class Handler(BaseRequestHandler):
                     NEWconf = config_editor.create_new(name=gname).create()
                     retdata = {f"{IPadrr}": NEWconf}
                 
-                elif "upload_finish" in self.brokercmd:
-                    pass
+                elif  "finishfile" in self.brokercmd:
+                    File = self.brokercmd["finishfile"]
+                    gname = self.brokercmd["gamename"]
+                    os.chdir(gamepath)
+                    try:
+                        with ZipFile(File) as zf:
+                            zf.extractall(gname)
+                        zf.close()
+                        os.remove(File)
+                        logging.info(f"serverIP : {IPadrr} upload finish")
+                        retdata = {f"{IPadrr}": "TRUE"}
+                    except:
+                        retdata = {f"{IPadrr}": "FALSE"}
+
 
                 elif "gamename" and 'config' in self.brokercmd:
                     gname = self.brokercmd["gamename"]
@@ -296,7 +305,7 @@ if __name__ == "__main__":  # server_socket
     PORT = 8000
     ADDR = (IPadrr, PORT)
     GS = game_status()
-    sync_DB(GS.get_nowgame()).pid_check()
+    sync_DB(GS.get_nowpid()).pid_check()
     server = ThreadingTCPServer(ADDR, Handler)
     logging.info(f"server_socket start IP : {IPadrr}")
     server.serve_forever()

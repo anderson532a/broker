@@ -10,8 +10,8 @@ ALLOWED_EXTENSIONS = set(['zip'])
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
-another = ''
-server_ip = (another, "192.168.43.196") # server ip
+anIP = ''
+server_ip = ("192.168.43.196",) # server ip   ###
 server_status = {server_ip[0]: None} # {server ip : player ip}
 log = app.logger
 
@@ -30,7 +30,6 @@ class gameserver_CMD:
         self.CMD = DIC
         result = self._connection.jsncontrol(**self.CMD)
         return result
-
 
 @app.route("/")
 def home():
@@ -56,11 +55,6 @@ def test():
         print(gname)
         print(DATA, IP)
         return "good"
-
-@app.route('/Status', methods=['GET'])
-def serverstatus():
-    global server_status
-    pass
 
 
 # api excute game
@@ -106,22 +100,24 @@ def addgame():
     gname = request.args.get('gamename', type=str)
     CONFIG = dict(request.form)
     CONFIG['gamename'] = gname
-   # if 'file' not in request.files:
-        #log.error("request with no file")
-       # return "no file, please try again"
-    #else:
+
     Zip = request.files['zip']
     Zip.save((os.path.join(app.config['UPLOAD_FOLDER'], Zip.filename)))
     log.info(f"API get zip : {Zip.filename}")
     File = f"{gname}.zip"
     CONFIG['file'] = File
     result = {}
+    Finish = dict()
+    Finish['gamename'] = gname
+    Finish['finishfile'] = File
     for i in server_ip:
-        result.update(gameserver_CMD(i).APICTL(**CONFIG))
+        A = gameserver_CMD(i).APICTL(**CONFIG)
         filetransfer = remote_control.SftpClient(i)
         filetransfer.upload(filename=Zip.filename, name=File)
         filetransfer.close()
-        gameserver_CMD(i).APICTL({"serverstatus":"upload_finish"})
+        B = gameserver_CMD(i).APICTL(**Finish)
+        result.update(A)
+        result.update(B)
     
     os.remove(Zip.filename)
     if "false" in result.items():

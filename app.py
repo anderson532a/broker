@@ -10,13 +10,54 @@ ALLOWED_EXTENSIONS = set(['zip'])
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
-anIP = ''
-server_ip = ("192.168.43.196",) # server ip   ###
-server_status = {server_ip[0]: None} # {server ip : player ip}
+# server_ip = ("192.168.43.196",) # server ip   ###
+# server_status = {server_ip[0]: None} # {server ip : player ip}
 log = app.logger
 
 
-class gameserver_CMD:
+class serverstatus:
+    status = {}
+    IP = ()
+    def __init__(self):
+        self.IP = ("192.168.43.196",) # server ip   ###
+        for i in self.IP:
+            self.status[i] = None # {server ip : player ip}
+        self.Log()
+
+    @classmethod
+    def Log(cls):
+        log.info(f'server status : {cls.status}')
+
+    @classmethod
+    def get_value(cls):
+        return cls.status.values()
+
+    @classmethod
+    def get_IP(cls):
+        log.info(f'server IP : {cls.IP}')
+        return cls.IP
+
+    def release(self, Sip):
+        self.Log()
+        self.status[Sip] = None
+        self.Log()
+
+    def asign(self, Cip):
+        self.Log()
+        AS = False
+        for i in self.IP:
+            if self.status[i] != None:
+                log.info(f'ip : {i} running game')
+            else:
+                self.status[i] = Cip
+                AS = True
+                break
+        self.Log()
+        if AS == False:
+            log.info('server full please wait')
+    
+
+class gameserver:
     _connection = None
     def __init__(self, ip):
         self.CMD = {"serverstatus":"refresh"}
@@ -24,7 +65,9 @@ class gameserver_CMD:
         self._connection = remote_control.client_socket(self.ip)
 
     def refresh(self):
-        self._connection.jsncontrol(**self.CMD)
+        result = self._connection.jsncontrol(**self.CMD)
+        SS.release(result["Idle"])
+
 
     def APICTL(self, **DIC):
         self.CMD = DIC
@@ -60,36 +103,31 @@ def test():
 # api excute game
 @app.route('/IP', methods=['GET'])
 def startGame():
-    global server_status
+    # global server_status
     startapi = dict(request.args)
     conip = request.remote_addr
-    # log.info(server_status)
-    for i in server_ip:
-        log.info(f"serverIp :{i}")
-        if i in server_status.values():
+    for i in IP_T:
+
+        if i in SS.get_value():
             retdata = {"gamestatus": "TRUE",
                                    "gameIP": i, "PID": ""}
             return jsonify(retdata)
-        elif i == '':
-            pass
         else:
-            result = gameserver_CMD(i).APICTL(**startapi)
+            result = gameserver(i).APICTL(**startapi)
             log.debug(result)
-            # server_status[i] = conip
+            SS.asign(conip)
             return jsonify(result)
 
 
 @app.route('/End', methods=['GET'])
 def endGame():
-    global server_status
     exmode = request.args.get("excuteMode", type=str)
     ip = request.args.get("serverIp", type=str)
     pid = request.args.get("pid", type=str)
     remote_status = remote_control.remote(ip).taskkill(exmode, pid)
-    result = gameserver_CMD(ip).refresh()
+    gameserver(ip).refresh()
 
-    if remote_status == 0 or "IDLE" in result:
-        server_status[ip] = ""
+    if remote_status == 0 :
         return jsonify(gamestatus="end game sucessful")
     else:
         return jsonify(gamestatus="failed")
@@ -110,12 +148,12 @@ def addgame():
     Finish = dict()
     Finish['gamename'] = gname
     Finish['finishfile'] = File
-    for i in server_ip:
-        A = gameserver_CMD(i).APICTL(**CONFIG)
+    for i in IP_T:
+        A = gameserver(i).APICTL(**CONFIG)
         filetransfer = remote_control.SftpClient(i)
         filetransfer.upload(filename=Zip.filename, name=File)
         filetransfer.close()
-        B = gameserver_CMD(i).APICTL(**Finish)
+        B = gameserver(i).APICTL(**Finish)
         result.update(A)
         result.update(B)
     
@@ -137,8 +175,8 @@ def config():
         log.warning("no data in config body")
         return "no config body"
     else:
-        for i in server_ip:
-            result = gameserver_CMD(i).APICTL(**BODY)
+        for i in IP_T:
+            result = gameserver(i).APICTL(**BODY)
             if "false" in result.items():
                 log.waring(f"wrong info: {result}")
                 return {"status": "Edit failed"}
@@ -147,4 +185,7 @@ def config():
 
 
 if __name__ == "__main__":
+    SS = serverstatus()
+    IP_T = SS.get_IP()
     app.run(host="0.0.0.0", debug=True)
+    

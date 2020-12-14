@@ -252,7 +252,7 @@ class Handler(BaseRequestHandler):
                     elif "refresh" in self.brokercmd.values():
                         GS.initial()
                         logging.info("-- server status refresh --")
-                        retdata = { "IDLE":f"{IPadrr}"}
+                        retdata = { "Idle":f"{IPadrr}"}
 
                     elif "gamename" and "file" in self.brokercmd:
                         gname = self.brokercmd["gamename"]

@@ -1,7 +1,7 @@
 import os, sys
 import subprocess
 from zipfile import ZipFile
-import socket
+import socket, psutil
 from socketserver import BaseRequestHandler, ThreadingTCPServer
 import logging, json, time
 import config_editor
@@ -83,7 +83,7 @@ class excute_game:
         if self.status == 0:
             logging.info(f"{Name} game excuted")
         else:
-            logging.info("game failed")
+            logging.info("game excuted failed")
 
     def get_IP(self):
         if self.status == 0:
@@ -127,7 +127,7 @@ class sync_DB:
         cls.data = SQL_connect.readSQL().select(*("gamename", "pid", "status"),
                             **{"serverIp": IPadrr})
         if len(cls.data) == 0:
-            logging.info("server IP has no read in select CMD")
+            logging.debug("server IP has no read in select CMD")
         else:
             TF = list(zip(*cls.data))
             return TF
@@ -163,7 +163,7 @@ class sync_DB:
         ppid = ''
         CK = self.DB_check()
         DB = True
-        for i in range(5):
+        for i in range(3):
             if 'TRUE' in CK[2]:
                 DB = True
                 break
@@ -180,7 +180,7 @@ class sync_DB:
                 excute_game.kill_game(self.pid)
                 return "k"
             else:
-                pass
+                logging.info('-- gameDB_check stop --')
         else:
             for line in reversed(self.data):
                 # 檢查DB status
@@ -205,100 +205,105 @@ class Handler(BaseRequestHandler):
             if PAR == "k":
                 GS.initial()
                 now = GS.get_nowpid()
-            self.data = self.request.recv(2048).strip()
-            logging.info(f"send length = {len(self.data)}")
-            logging.info(f"server receive = {self.data}")
+            try:
+                self.data = self.request.recv(2048).strip()
+                logging.info(f"send length = {len(self.data)}")
+                logging.info(f"server receive = {self.data}")
 
-            if len(self.data) > 0:
-                raw = self.data.decode('utf-8')
-                self.brokercmd = json.loads(raw)
-                if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
-                    # gameID = self.brokercmd["gameId"]
-                    exmode = self.brokercmd["excuteMode"]
-                    config = self.brokercmd["configfile"]
-                    gamename = config.split('.')[1]
-                    GS.log()
-                    game = excute_game()
+                if len(self.data) > 0:
+                    raw = self.data.decode('utf-8')
+                    self.brokercmd = json.loads(raw)
+                    if "gameId" and "excuteMode" and "configfile" in self.brokercmd:
+                        # gameID = self.brokercmd["gameId"]
+                        exmode = self.brokercmd["excuteMode"]
+                        config = self.brokercmd["configfile"]
+                        gamename = config.split('.')[1]
+                        GS.log()
+                        game = excute_game()
 
-                    if now == '':
-                        logging.info("--- first game start ---")
-                        [IPadr, PID] = game.auto(config, exmode)
-                        if PID != "":
-                            GS.update_status(PID, gamename)
-
-                    elif GS.get_len() == 1:
-                        if gamename in GS.get_dict().values():
-                            logging.info("--- same game ---")
-                            IPadr = IPadrr
-                            PID = GS.get_nowgame()
-                        else:
-                            logging.info("--- another game ---")
-                            excute_game.kill_game(now)
+                        if now == '':
+                            logging.info("--- first game start ---")
                             [IPadr, PID] = game.auto(config, exmode)
                             if PID != "":
                                 GS.update_status(PID, gamename)
 
+                        elif GS.get_len() == 1:
+                            if gamename in GS.get_dict().values():
+                                logging.info("--- same game ---")
+                                IPadr = IPadrr
+                                PID = GS.get_nowpid()
+                            else:
+                                logging.info("--- another game ---")
+                                excute_game.kill_game(now)
+                                [IPadr, PID] = game.auto(config, exmode)
+                                if PID != "":
+                                    GS.update_status(PID, gamename)
+
+                        else:
+                            logging.error("--- out of range ---")
+
+                        if IPadr == "" and PID == "":
+                            retdata = {"gamestatus": "FALSE",
+                                    "gameIP": IPadr, "PID": PID}
+                        else:
+                            retdata = {"gamestatus": "TRUE",
+                                    "gameIP": IPadr, "PID": PID}
+
+                    elif "refresh" in self.brokercmd.values():
+                        GS.initial()
+                        logging.info("-- server status refresh --")
+                        retdata = { "IDLE":f"{IPadrr}"}
+
+                    elif "gamename" and "file" in self.brokercmd:
+                        gname = self.brokercmd["gamename"]
+                        self.filename = self.brokercmd["file"]
+                        os.chdir(oripath)
+                        NEWconf = config_editor.create_new(name=gname).create()
+                        retdata = {f"{IPadrr}": NEWconf}
+                    
+                    elif  "finishfile" in self.brokercmd:
+                        File = self.brokercmd["finishfile"]
+                        gname = self.brokercmd["gamename"]
+                        os.chdir(gamepath)
+                        try:
+                            with ZipFile(File) as zf:
+                                zf.extractall(gname)
+                            zf.close()
+                            os.remove(File)
+                            logging.info(f"serverIP : {IPadrr} upload finish")
+                            retdata = {f"{IPadrr}": "TRUE"}
+                        except:
+                            retdata = {f"{IPadrr}": "FALSE"}
+
+
+                    elif "gamename" and 'config' in self.brokercmd:
+                        gname = self.brokercmd["gamename"]
+                        MODIconf = self.brokercmd['config']
+                        resconf = []
+                        for i in range(len(MODIconf)):
+                            data = {}
+                            data['dictionary'] = MODIconf[i]['dictionary']
+                            data['gaColumn'] = MODIconf[i]['gaColumn']
+                            if MODIconf[i].get('value'):
+                                data['value'] = MODIconf[i]['value']
+                            elif MODIconf[i].get('newValue'):
+                                data['newValue'] = MODIconf[i]['newValue']
+                            resconf.append(config_editor.edit_config(
+                                gname).match_modify(**data))
+                        retdata = {f"{IPadrr}": resconf}
+
                     else:
-                        logging.error("--- out of range ---")
+                        logging.error("server can't recognize args")
 
-                    if IPadr == "" and PID == "":
-                        retdata = {"gamestatus": "FALSE",
-                                   "gameIP": IPadr, "PID": PID}
-                    else:
-                        retdata = {"gamestatus": "TRUE",
-                                   "gameIP": IPadr, "PID": PID}
-
-                elif "refresh" in self.brokercmd.values():
-                    GS.initial()
-                    logging.info("-- server status refresh --")
-                    retdata = {"gamestatus": "IDLE"}
-
-                elif "gamename" and "file" in self.brokercmd:
-                    gname = self.brokercmd["gamename"]
-                    self.filename = self.brokercmd["file"]
-                    os.chdir(oripath)
-                    NEWconf = config_editor.create_new(name=gname).create()
-                    retdata = {f"{IPadrr}": NEWconf}
-                
-                elif  "finishfile" in self.brokercmd:
-                    File = self.brokercmd["finishfile"]
-                    gname = self.brokercmd["gamename"]
-                    os.chdir(gamepath)
-                    try:
-                        with ZipFile(File) as zf:
-                            zf.extractall(gname)
-                        zf.close()
-                        os.remove(File)
-                        logging.info(f"serverIP : {IPadrr} upload finish")
-                        retdata = {f"{IPadrr}": "TRUE"}
-                    except:
-                        retdata = {f"{IPadrr}": "FALSE"}
-
-
-                elif "gamename" and 'config' in self.brokercmd:
-                    gname = self.brokercmd["gamename"]
-                    MODIconf = self.brokercmd['config']
-                    resconf = []
-                    for i in range(len(MODIconf)):
-                        data = {}
-                        data['dictionary'] = MODIconf[i]['dictionary']
-                        data['gaColumn'] = MODIconf[i]['gaColumn']
-                        if MODIconf[i].get('value'):
-                            data['value'] = MODIconf[i]['value']
-                        elif MODIconf[i].get('newValue'):
-                            data['newValue'] = MODIconf[i]['newValue']
-                        resconf.append(config_editor.edit_config(
-                            gname).match_modify(**data))
-                    retdata = {f"{IPadrr}": resconf}
-
+                    self.request.sendall(json.dumps(retdata).encode('utf-8'))
+                    logging.info(f'server send = {retdata}')
                 else:
-                    logging.error("server can't recognize args")
-
-                self.request.sendall(json.dumps(retdata).encode('utf-8'))
-                logging.info(f'server send = {retdata}')
-            else:
+                    logging.warning("didn't receive by broker")
+                    break
+            except Exception:
                 logging.warning("didn't receive by broker")
                 break
+                 
 
 
 if __name__ == "__main__":  # server_socket

@@ -95,7 +95,7 @@ class edit_config(read_in):
                 fw.write(writein)
                 logging.info("write in success")
                 return True
-        except:
+        except Exception:
             logging.error("something wrong in write in", exc_info=True)
             return False
 

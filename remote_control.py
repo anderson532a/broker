@@ -77,7 +77,7 @@ def sendfile(self, filename, newname):
         logging.info(f"client receive : {msg}")
         return msg
 
-    except:
+    except Exception:
         logging.error("file error", exc_info=True)
 
 

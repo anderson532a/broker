@@ -1,6 +1,6 @@
 import MySQLdb
 import logging
-
+#%#
 gamedb = MySQLdb.connect(host="localhost",
                          user="server",
                          passwd="jasmine",
@@ -113,29 +113,4 @@ class writeSQL(SQL_CMD):
 
     def delete(self):
         pass
-
-'''
-if __name__ == "__main__":
-    A = readSQL()
-    B = writeSQL()
-    results = A.select(*("gamename", "pid", "status"), **{"serverIp":"192.168.43.196"})
-    print(type(results), len(results))
-    T = list(zip(*results))
-    print(T)
-    #if 'TRUE' not in T[2]:
-    #    print("FFF")
-    for line in reversed(results):
-        print(line)
-        # 檢查DB status
-        
-        if 'TRUE' in line:
-            if line[1] == '19372':
-                print('server & DB pid sync')
-            else:
-                print('server & DB double TRUE')
-'''
-        
-                
-
-        
         

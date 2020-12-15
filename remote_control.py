@@ -4,7 +4,7 @@ from paramiko import Transport, SFTPClient
 import logging, json, time
 FORMAT = "%(asctime)s -%(levelname)s : %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-
+#%#
 _account = {"192.168.43.196":"RD"}
 _pwd = {'RD':'Aa123456'}
 
@@ -52,33 +52,33 @@ class client_socket:
         return json.loads(msg)
 
 # 大檔案傳輸速度不佳
-def sendfile(self, filename, newname):
-    self.client.send("sendfile".encode('utf-8'))
-    R = self.client.recv(2048).decode('utf-8')
-    if R == "ready":
-        self.client.send(f"{newname}".encode('utf-8'))
-    time.sleep(2)
-    try:
-        with open (filename, 'rb')as rb:
-            logging.info("file opened")
-        while True:
-            data = rb.readline(4096)
-            if not data:
-                break
-            self.client.send(data)
-            #logging.debug(f"data : {data}")
-            logging.info("client sending file ....")
-            
-        self.client.send("done".encode('utf-8'))
-        # self.client.shutdown(socket.SHUT_WR)
-        logging.info("send file done")
+    def sendfile(self, filename, newname):
+        self.client.send("sendfile".encode('utf-8'))
+        R = self.client.recv(2048).decode('utf-8')
+        if R == "ready":
+            self.client.send(f"{newname}".encode('utf-8'))
+        time.sleep(2)
+        try:
+            with open (filename, 'rb')as rb:
+                logging.info("file opened")
+            while True:
+                data = rb.readline(4096)
+                if not data:
+                    break
+                self.client.send(data)
+                #logging.debug(f"data : {data}")
+                logging.info("client sending file ....")
+                
+            self.client.send("done".encode('utf-8'))
+            # self.client.shutdown(socket.SHUT_WR)
+            logging.info("send file done")
 
-        msg = self.client.recv(1024).decode('utf-8')
-        logging.info(f"client receive : {msg}")
-        return msg
+            msg = self.client.recv(1024).decode('utf-8')
+            logging.info(f"client receive : {msg}")
+            return msg
 
-    except Exception:
-        logging.error("file error", exc_info=True)
+        except Exception:
+            logging.error("file error", exc_info=True)
 
 
 class SftpClient:
@@ -124,7 +124,7 @@ class SftpClient:
                         format(UP, TO))
 
     def upload(self, filename, name):
-
+        #%#
         local_path = 'C:\\Users\\RD\\Desktop\\broker\\' + f"{filename}"
         remote_path = gamepath + f"{name}"
         self._connection.put(localpath=local_path,
@@ -137,21 +137,3 @@ class SftpClient:
         self._connection.close()
 
 
-'''
-if __name__ == "__main__":
-
-
-    # A = client_socket("AndersonCJ_Chen")
-    # A.client.send("done".encode('utf-8'))
-    #api = {"gameId":123, "excutemode":"periodic"}
-    #B = A.control(**api)
-
-    # C = A.sendfile("Screen Shot 2020-10-24 at 11.01.26 AM.zip")
-    hostname = socket.gethostname()
-    IPadrr = socket.gethostbyname(hostname)
-    user = 'RD'
-    password = 'Aa123456'
-    sclient = SftpClient(IPadrr)
-    sclient.upload('')
-    sclient.close()
-    '''

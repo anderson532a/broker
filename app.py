@@ -10,9 +10,8 @@ ALLOWED_EXTENSIONS = set(['zip'])
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
-anIP = ''
-server_ip = ("192.168.43.196",) # server ip   ###
-server_status = {server_ip[0]: None} # {server ip : player ip}
+server_ip = ("192.168.43.196",) # server ip   #%#
+server_status = {server_ip[0]: None} # {server ip :game pid}
 log = app.logger
 
 
@@ -66,17 +65,16 @@ def startGame():
     # log.info(server_status)
     for i in server_ip:
         log.info(f"serverIp :{i}")
-        if i in server_status.values():
+        '''
+        if i in server_status:
             retdata = {"gamestatus": "TRUE",
-                                   "gameIP": i, "PID": ""}
+                                   "gameIP": i, "PID": server_status[i]}
             return jsonify(retdata)
-        elif i == '':
-            pass
-        else:
-            result = gameserver_CMD(i).APICTL(**startapi)
-            log.debug(result)
-            # server_status[i] = conip
-            return jsonify(result)
+        '''
+        result = gameserver_CMD(i).APICTL(**startapi)
+        log.debug(result)
+        # server_status[i] = result["PID"]
+        return jsonify(result)
 
 
 @app.route('/End', methods=['GET'])

@@ -6,7 +6,7 @@ from socketserver import BaseRequestHandler, ThreadingTCPServer
 import logging, json, time
 import config_editor
 import SQL_connect
-###
+#%#
 # excute game command
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\"
@@ -138,14 +138,6 @@ class sync_DB:
         logging.info('-- pid_check start --')
         if self.pid == '':
             logging.info("NO game pid in server")
-            '''
-            DB = self.S.select(*("pid", "status"), **{"serverIp":IPadrr})
-            
-            if len(DB) == 0:
-                logging.info("server IP has no read in select CMD")
-            else:
-                TF = list(zip(*DB))
-                '''
             CK = self.DB_check()
             if CK != None:
                 if 'TRUE' in CK[2]:
@@ -186,9 +178,9 @@ class sync_DB:
                 # 檢查DB status
                 if 'TRUE' in line:
                     if line[1] == str(self.pid):
-                        logging.info('server & DB pid sync')
+                        logging.info('same pid in server & DB')
                     else:
-                        logging.info('server & DB diff pid')
+                        logging.info('diff pid in server & DB ')
                         # update gaconnection set status='FALSE' where PID=self.pid
                         self.I.update(
                             col="pid", val=line[1], **{"status": "FALSE"})

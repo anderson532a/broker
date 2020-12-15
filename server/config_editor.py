@@ -4,7 +4,7 @@ from pathlib import Path
 import SQL_connect
 
 c = ".config"
-
+#%#
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\"
 diclist = ['[core]\n', '[video]\n', '[audio]\n', '[filter]\n',  '[ga-server-event-driven]\n', '[ga-server-periodic]\n']
 class read_in:
@@ -127,16 +127,3 @@ class create_new(read_in):
             logging.error("file already exist", exc_info=True)
             return "FALSE"
 
-
-'''
-if __name__ == "__main__": # for testing
-    
-    A = {'dictionary':"[core]", "gaColumn": "include = common/server-common.conf", "value": 'True'}
-    B = {'dictionary':"[ga-server-periodic]", "gaColumn": "enable-audio", "value": 'false'}
-    C = {'dictionary':"[video]", "gaColumn": "video-fps", "value": 50}
-    test = edit_config("tttttt")
-    test.match_modify(**C)
-    
-    create_new('ABC').create()
-    
-'''

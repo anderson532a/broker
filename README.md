@@ -54,20 +54,6 @@ winrm set winrm/config/service '@{AllowUnencrypted="true"}'
 **gaminganywhere** : C:\\gaminganywhere-0.8.0\\bin\\  
 **config file** : C:\\gaminganywhere-0.8.0\\bin\\config\\
 
-:::spoiler PC 固定IP設定
-1. 連線wifi
-2. ipconfig 確認IP位址是否正確
-![](https://i.imgur.com/gQmDEAB.png)
-3. 若不是192.168.43.196 先打開"更改IP.BAT"修改gateway 與dns
-![](https://i.imgur.com/oKsQNs0.png)
-![](https://i.imgur.com/RgyIgAN.png)
-
-4. 最後右鍵"以系統管理員執行"
-![](https://i.imgur.com/5WUMKoy.png)
-5. 需要回復IP則一樣右鍵"回復.bat"
-6. *bat檔在notebook 
-:::
-
 ## .py檔案
 ### Component Diagram
 ```plantuml
@@ -329,13 +315,4 @@ flask run --reload --debugger --host 0.0.0.0
 * 目前最後版本已合併master，dev1 為測試功能用途分支
 * 固定位置、路徑、IP 在程式裡以 #%# 標記
 * server game 狀態以DB為準，若開啟遊戲後未馬上寫入DB則會被關閉(時間差有機會)
-
-## 其他資料
-
-### [觀看模式demo](https://drive.google.com/file/d/1YzknRzJSwJtoqhu5RMYQPSjuPr1rR0IL/view?usp=sharing)
-
-
-### [GA server](hackmd.io/aJ1q1xhvRGyZmkAZ1c0M5A?view)
-<iframe width="100%" height="300" src="https://hackmd.io/aJ1q1xhvRGyZmkAZ1c0M5A?view"  frameborder="0"></iframe>
-
 

@@ -5,8 +5,9 @@ import logging, json, time
 FORMAT = "%(asctime)s -%(levelname)s : %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 #%#
-_account = {"192.168.43.196":"RD"}
+_account = {"172.16.0.28":"RD"}
 _pwd = {'RD':'Aa123456'}
+
 
 exepath = "C:\\gaminganywhere-0.8.0\\bin\\"
 configpath = "C:\\gaminganywhere-0.8.0\\bin\\config\\"

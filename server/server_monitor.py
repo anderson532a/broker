@@ -128,6 +128,7 @@ class sync_DB:
                             **{"serverIp": IPadrr})
         if len(cls.data) == 0:
             logging.debug("server IP has no read in select CMD")
+            return "false"
         else:
             TF = list(zip(*cls.data))
             return TF

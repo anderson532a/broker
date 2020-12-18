@@ -10,7 +10,8 @@ ALLOWED_EXTENSIONS = set(['zip'])
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
-server_ip = ("192.168.43.196",) # server ip   #%#
+# server_ip = ("192.168.43.196",) # server ip   #%#
+server_ip = ("172.16.0.28",) # server ip   #%#
 server_status = {server_ip[0]: None} # {server ip :game pid}
 log = app.logger
 
@@ -133,7 +134,6 @@ def config():
     
     if len(BODY['config']) < 1:
         log.warning("no data in config body")
-        return "no config body"
     else:
         for i in server_ip:
             result = gameserver_CMD(i).APICTL(**BODY)
@@ -141,7 +141,7 @@ def config():
                 log.waring(f"wrong info: {result}")
                 return {"status": "Edit failed"}
             
-        return {"status": "Edit success"}
+    return {"status": "Edit success"}
 
 
 if __name__ == "__main__":
